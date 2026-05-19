@@ -7,6 +7,7 @@ import { generateText, LLMError } from "@/lib/llm";
 import { uploadImagem, deletarImagem, R2Error } from "@/lib/r2";
 import { tituloEmpresa } from "@/lib/site-loader";
 import { log } from "@/lib/logger";
+import { verificarCname, verificarMX, validarDominio, alvoCNAME, MX_CLOUDFLARE, SPF_CLOUDFLARE } from "@/lib/dns-verify";
 
 export type EditState = { ok?: boolean; erro?: string } | undefined;
 export type IaResult = { ok: true; texto: string } | { ok: false; erro: string };
@@ -132,6 +133,162 @@ export async function uploadImagemAction(
   revalidatePath(`/admin/${slug}`);
   revalidatePath(`/s/${slug}`);
   return { ok: true, url };
+}
+
+export type DominioState =
+  | { ok: true; status: string; alvo?: string; detalhe?: string }
+  | { ok: false; erro: string }
+  | undefined;
+
+export async function salvarDominioProprio(
+  slug: string,
+  _prev: DominioState,
+  formData: FormData,
+): Promise<DominioState> {
+  const raw = String(formData.get("dominio") ?? "").trim().toLowerCase();
+  const dominio = raw.replace(/^https?:\/\//, "").replace(/\/.*/, "");
+
+  if (!dominio) {
+    await prisma.site.update({
+      where: { slug },
+      data: { dominioProprio: null, dominioStatus: "NAO_CADASTRADO", dominioVerifEm: null, cnameAlvo: null },
+    });
+    revalidatePath(`/admin/${slug}`);
+    return { ok: true, status: "removido" };
+  }
+
+  if (!validarDominio(dominio)) return { ok: false, erro: "Domínio inválido" };
+
+  const alvo = alvoCNAME();
+  const existente = await prisma.site.findFirst({
+    where: { dominioProprio: dominio, NOT: { slug } },
+    select: { slug: true },
+  });
+  if (existente) return { ok: false, erro: `Domínio já cadastrado em outro site (${existente.slug})` };
+
+  await prisma.site.update({
+    where: { slug },
+    data: { dominioProprio: dominio, dominioStatus: "PENDENTE_DNS", cnameAlvo: alvo },
+  });
+  log.info("dominio cadastrado", { slug, dominio, alvo });
+  revalidatePath(`/admin/${slug}`);
+  return { ok: true, status: "PENDENTE_DNS" };
+}
+
+export async function verificarDominioAcao(slug: string): Promise<DominioState> {
+  const site = await prisma.site.findUnique({
+    where: { slug },
+    select: { id: true, dominioProprio: true, cnameAlvo: true },
+  });
+  if (!site || !site.dominioProprio || !site.cnameAlvo) {
+    return { ok: false, erro: "Sem domínio cadastrado" };
+  }
+
+  const r = await verificarCname(site.dominioProprio, site.cnameAlvo);
+  if (r.ok) {
+    await prisma.site.update({
+      where: { id: site.id },
+      data: { dominioStatus: "VERIFICADO", dominioVerifEm: new Date() },
+    });
+    log.info("dominio verificado", { slug, dominio: site.dominioProprio, alvo: r.alvo });
+    revalidatePath(`/admin/${slug}`);
+    return { ok: true, status: "VERIFICADO", alvo: r.alvo };
+  }
+  await prisma.site.update({
+    where: { id: site.id },
+    data: { dominioStatus: "FALHA", dominioVerifEm: new Date() },
+  });
+  log.warn("dominio falhou", { slug, dominio: site.dominioProprio, razao: r.razao, detalhe: r.detalhe });
+  revalidatePath(`/admin/${slug}`);
+  return { ok: false, erro: razaoMsg(r.razao, r.detalhe) };
+}
+
+function razaoMsg(razao: string, detalhe?: string): string {
+  switch (razao) {
+    case "NXDOMAIN":
+      return "Nenhum registro DNS encontrado pra esse domínio";
+    case "WRONG_TARGET":
+      return `Domínio responde mas aponta pra outro alvo${detalhe ? `: ${detalhe}` : ""}`;
+    case "INVALID_DOMAIN":
+      return "Domínio em formato inválido";
+    case "TIMEOUT":
+      return "Timeout consultando DNS, tente novamente";
+    default:
+      return detalhe ? `DNS: ${detalhe}` : "Falha desconhecida no DNS";
+  }
+}
+
+export type EmailState =
+  | { ok: true; status: string; encontrados?: { exchange: string; priority: number }[] }
+  | { ok: false; erro: string; encontrados?: { exchange: string; priority: number }[] }
+  | undefined;
+
+export async function salvarEmailComercial(
+  slug: string,
+  _prev: EmailState,
+  formData: FormData,
+): Promise<EmailState> {
+  const handle = String(formData.get("emailHandle") ?? "").trim().toLowerCase();
+  const forwardTo = String(formData.get("emailForwardTo") ?? "").trim().toLowerCase();
+
+  if (!handle && !forwardTo) {
+    await prisma.site.update({
+      where: { slug },
+      data: { emailHandle: null, emailForwardTo: null, emailStatus: "NAO_CONFIGURADO", emailVerifEm: null },
+    });
+    revalidatePath(`/admin/${slug}`);
+    return { ok: true, status: "removido" };
+  }
+  if (!/^[a-z0-9._-]+$/.test(handle)) return { ok: false, erro: "Handle inválido (use letras, números, ., _, -)" };
+  if (!/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(forwardTo)) return { ok: false, erro: "Email de encaminhamento inválido" };
+
+  await prisma.site.update({
+    where: { slug },
+    data: {
+      emailHandle: handle,
+      emailForwardTo: forwardTo,
+      emailStatus: "PENDENTE_MX",
+      mxRecords: JSON.parse(JSON.stringify(MX_CLOUDFLARE)),
+      spfRecord: SPF_CLOUDFLARE,
+    },
+  });
+  log.info("email comercial cadastrado", { slug, handle, forwardTo });
+  revalidatePath(`/admin/${slug}`);
+  return { ok: true, status: "PENDENTE_MX" };
+}
+
+export async function verificarEmailAcao(slug: string): Promise<EmailState> {
+  const site = await prisma.site.findUnique({
+    where: { slug },
+    select: { id: true, dominioProprio: true, emailHandle: true },
+  });
+  if (!site || !site.dominioProprio) return { ok: false, erro: "Cadastre o domínio próprio primeiro" };
+  if (!site.emailHandle) return { ok: false, erro: "Cadastre o handle de email primeiro" };
+
+  const r = await verificarMX(site.dominioProprio);
+  if (r.ok) {
+    await prisma.site.update({
+      where: { id: site.id },
+      data: { emailStatus: "VERIFICADO", emailVerifEm: new Date() },
+    });
+    log.info("email MX verificado", { slug, dominio: site.dominioProprio });
+    revalidatePath(`/admin/${slug}`);
+    return { ok: true, status: "VERIFICADO", encontrados: r.encontrados };
+  }
+  await prisma.site.update({
+    where: { id: site.id },
+    data: { emailStatus: "FALHA", emailVerifEm: new Date() },
+  });
+  log.warn("email MX falhou", { slug, dominio: site.dominioProprio, razao: r.razao });
+  revalidatePath(`/admin/${slug}`);
+  return {
+    ok: false,
+    erro:
+      r.razao === "NXDOMAIN" ? "Nenhum registro MX encontrado"
+      : r.razao === "INCOMPLETO" ? "MX presente mas não bate com Cloudflare Email Routing"
+      : "Erro consultando MX",
+    encontrados: r.encontrados,
+  };
 }
 
 export async function removerImagem(slug: string, tipo: "logo" | "hero") {
