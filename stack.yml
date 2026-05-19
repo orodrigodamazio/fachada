@@ -1,0 +1,51 @@
+version: "3.8"
+
+services:
+  app:
+    image: ghcr.io/orodrigodamazio/fachada:latest
+    networks:
+      - gmnet
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+      DATABASE_URL: ${DATABASE_URL}
+      NEXT_PUBLIC_ROOT_DOMAIN: ${NEXT_PUBLIC_ROOT_DOMAIN}
+      NEXT_PUBLIC_APP_HOSTS: ${NEXT_PUBLIC_APP_HOSTS}
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        order: start-first
+        failure_action: rollback
+        delay: 10s
+      restart_policy:
+        condition: any
+        delay: 5s
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+      labels:
+        traefik.enable: "true"
+        traefik.docker.network: "gmnet"
+        traefik.http.services.fachada-app.loadbalancer.server.port: "3000"
+
+        traefik.http.routers.fachada-apex.entrypoints: "websecure"
+        traefik.http.routers.fachada-apex.rule: "Host(`${ROOT_DOMAIN}`) || Host(`www.${ROOT_DOMAIN}`) || Host(`admin.${ROOT_DOMAIN}`)"
+        traefik.http.routers.fachada-apex.tls: "true"
+        traefik.http.routers.fachada-apex.tls.certresolver: "letsencryptresolver"
+        traefik.http.routers.fachada-apex.service: "fachada-app"
+
+        traefik.http.routers.fachada-wild.entrypoints: "websecure"
+        traefik.http.routers.fachada-wild.rule: "HostRegexp(`{sub:[a-z0-9-]+}.${ROOT_DOMAIN}`)"
+        traefik.http.routers.fachada-wild.tls: "true"
+        traefik.http.routers.fachada-wild.tls.certresolver: "letsencryptresolver"
+        traefik.http.routers.fachada-wild.tls.domains[0].main: "${ROOT_DOMAIN}"
+        traefik.http.routers.fachada-wild.tls.domains[0].sans: "*.${ROOT_DOMAIN}"
+        traefik.http.routers.fachada-wild.service: "fachada-app"
+
+networks:
+  gmnet:
+    external: true

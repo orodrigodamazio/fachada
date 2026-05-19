@@ -5,9 +5,32 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const site = await carregarSitePorSlug(slug);
   const titulo = site.metaTitle || tituloEmpresa(site.razaoSocial, site.nomeFantasia);
+  const descricao =
+    site.metaDescription ||
+    `${tituloEmpresa(site.razaoSocial, site.nomeFantasia)}${site.cnaeDescricao ? ` — ${site.cnaeDescricao}` : " — site institucional"}.`;
+
   return {
-    title: titulo,
-    description: site.metaDescription || `${tituloEmpresa(site.razaoSocial, site.nomeFantasia)} — site institucional.`,
+    title: { default: titulo, template: `%s | ${titulo}` },
+    description: descricao,
+    applicationName: titulo,
+    generator: undefined,
+    robots: { index: true, follow: true },
+    openGraph: {
+      title: titulo,
+      description: descricao,
+      siteName: titulo,
+      locale: "pt_BR",
+      type: "website",
+    },
+    twitter: {
+      card: "summary",
+      title: titulo,
+      description: descricao,
+    },
+    icons: {
+      icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    },
+    other: site.metaPixel ? { "fb:app_id": site.metaPixel } : undefined,
   };
 }
 

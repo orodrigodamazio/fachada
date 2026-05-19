@@ -7,6 +7,21 @@ datasource db {
   provider = "postgresql"
 }
 
+model Lead {
+  id          String   @id @default(cuid())
+  siteId      String
+  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  nome        String
+  email       String?
+  telefone    String?
+  mensagem    String
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@index([siteId, createdAt])
+}
+
 model Site {
   id              String   @id @default(cuid())
 
@@ -50,6 +65,8 @@ model Site {
   metaPixel       String?
 
   ativo           Boolean  @default(true)
+
+  leads           Lead[]
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
