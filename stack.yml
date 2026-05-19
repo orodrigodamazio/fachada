@@ -39,7 +39,7 @@ services:
         traefik.http.routers.fachada-apex.service: "fachada-app"
 
         traefik.http.routers.fachada-wild.entrypoints: "websecure"
-        traefik.http.routers.fachada-wild.rule: "HostRegexp(`^[a-z0-9-]+\\.${ROOT_DOMAIN_ESCAPED}$`)"
+        traefik.http.routers.fachada-wild.rule: "HostRegexp(`^[a-z0-9-]+\\.${ROOT_DOMAIN_ESCAPED}$$`)"
         traefik.http.routers.fachada-wild.tls: "true"
         traefik.http.routers.fachada-wild.tls.certresolver: "letsencryptresolver"
         traefik.http.routers.fachada-wild.service: "fachada-app"
