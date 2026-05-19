@@ -33,7 +33,7 @@ export default async function PreviewPage({ params }: { params: Promise<{ slug: 
   ].filter(Boolean).join(" · ");
 
   return (
-    <div className="min-h-dvh bg-zinc-50 dark:bg-zinc-950 px-4 py-10">
+    <div className="min-h-dvh bg-zinc-50 px-4 py-10">
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div>

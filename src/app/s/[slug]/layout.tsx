@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { carregarSitePorSlug, formatarCnpj, formatarEndereco, tituloEmpresa, type EnderecoJson } from "@/lib/site-loader";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
@@ -51,8 +52,11 @@ export default async function SiteLayout({
     <div className="min-h-dvh flex flex-col bg-white text-zinc-900">
       <header className="border-b border-zinc-200">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-6">
-          <Link href={base} className="font-semibold tracking-tight text-lg">
-            {titulo}
+          <Link href={base} className="flex items-center gap-3 font-semibold tracking-tight text-lg">
+            {site.logoUrl ? (
+              <Image src={site.logoUrl} alt={titulo} width={36} height={36} className="object-contain" unoptimized />
+            ) : null}
+            <span>{titulo}</span>
           </Link>
           <nav className="flex items-center gap-6 text-sm text-zinc-600">
             <Link href={`${base}/sobre`} className="hover:text-zinc-900">Sobre</Link>

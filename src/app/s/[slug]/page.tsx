@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { carregarSitePorSlug, formatarTelefone, tituloEmpresa } from "@/lib/site-loader";
 
 export default async function HomePublica({ params }: { params: Promise<{ slug: string }> }) {
@@ -15,13 +16,19 @@ export default async function HomePublica({ params }: { params: Promise<{ slug: 
 
   return (
     <>
-      <section className="border-b border-zinc-200">
-        <div className="max-w-6xl mx-auto px-6 py-24 md:py-32">
+      <section className="relative border-b border-zinc-200 overflow-hidden">
+        {site.heroImageUrl ? (
+          <div className="absolute inset-0">
+            <Image src={site.heroImageUrl} alt="" fill className="object-cover" unoptimized priority />
+            <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/40" />
+          </div>
+        ) : null}
+        <div className="relative max-w-6xl mx-auto px-6 py-24 md:py-32">
           <div className="max-w-2xl space-y-6">
-            <h1 className="text-4xl md:text-5xl font-semibold tracking-tight leading-tight">
+            <h1 className="text-4xl md:text-5xl font-semibold tracking-tight leading-tight text-zinc-900">
               {site.heroTitulo || titulo}
             </h1>
-            <p className="text-lg text-zinc-600 leading-relaxed">{subtitulo}</p>
+            <p className="text-lg text-zinc-700 leading-relaxed">{subtitulo}</p>
             <div className="flex flex-wrap gap-3 pt-2">
               <Link
                 href={`${base}/contato`}
@@ -31,7 +38,7 @@ export default async function HomePublica({ params }: { params: Promise<{ slug: 
               </Link>
               <Link
                 href={`${base}/sobre`}
-                className="inline-flex items-center h-11 px-6 rounded-md border border-zinc-300 text-sm font-medium hover:bg-zinc-50"
+                className="inline-flex items-center h-11 px-6 rounded-md border border-zinc-300 bg-white text-sm font-medium hover:bg-zinc-50"
               >
                 Conheça a empresa
               </Link>

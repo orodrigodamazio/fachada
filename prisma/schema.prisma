@@ -49,6 +49,9 @@ model Site {
   servicos        Json?
   rodape          String?
 
+  logoUrl         String?
+  heroImageUrl    String?
+
   dominioProprio  String?  @unique
   dominioStatus   DominioStatus @default(NAO_CADASTRADO)
   dominioVerifEm  DateTime?

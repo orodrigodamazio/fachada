@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatarCnpj } from "@/lib/cnpj";
 import { EditForm } from "./edit-form";
+import { UploadImagem } from "./upload-imagem";
 import { alternarAtivo, deletarSite } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -50,6 +51,11 @@ export default async function AdminSite({ params }: { params: Promise<{ slug: st
             </Link>
           </div>
         </header>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <UploadImagem slug={site.slug} tipo="logo" rotulo="Logo" urlAtual={site.logoUrl} aspectRatio="square" />
+          <UploadImagem slug={site.slug} tipo="hero" rotulo="Imagem do hero" urlAtual={site.heroImageUrl} aspectRatio="wide" />
+        </div>
 
         <EditForm
           slug={site.slug}

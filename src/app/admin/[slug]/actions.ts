@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { generateText, LLMError } from "@/lib/llm";
+import { uploadImagem, deletarImagem, R2Error } from "@/lib/r2";
 import { tituloEmpresa } from "@/lib/site-loader";
 
 export type EditState = { ok?: boolean; erro?: string } | undefined;
@@ -91,4 +92,55 @@ export async function deletarSite(slug: string) {
   await prisma.site.delete({ where: { slug } });
   revalidatePath(`/admin`);
   redirect("/admin");
+}
+
+export type UploadState = { ok?: true; url?: string; erro?: string } | undefined;
+
+export async function uploadImagemAction(
+  slug: string,
+  tipo: "logo" | "hero",
+  _prev: UploadState,
+  formData: FormData,
+): Promise<UploadState> {
+  const file = formData.get("arquivo") as File | null;
+  if (!file || file.size === 0) return { erro: "Selecione um arquivo" };
+
+  const site = await prisma.site.findUnique({
+    where: { slug },
+    select: { id: true, logoUrl: true, heroImageUrl: true },
+  });
+  if (!site) return { erro: "Site não encontrado" };
+
+  let url: string;
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    url = await uploadImagem({ buffer, contentType: file.type, slug, tipo });
+  } catch (e) {
+    const err = e as R2Error;
+    return { erro: err.message };
+  }
+
+  const campo = tipo === "logo" ? "logoUrl" : "heroImageUrl";
+  const antigo = tipo === "logo" ? site.logoUrl : site.heroImageUrl;
+
+  await prisma.site.update({ where: { id: site.id }, data: { [campo]: url } });
+  if (antigo) await deletarImagem(antigo);
+
+  revalidatePath(`/admin/${slug}`);
+  revalidatePath(`/s/${slug}`);
+  return { ok: true, url };
+}
+
+export async function removerImagem(slug: string, tipo: "logo" | "hero") {
+  const site = await prisma.site.findUnique({
+    where: { slug },
+    select: { id: true, logoUrl: true, heroImageUrl: true },
+  });
+  if (!site) return;
+  const campo = tipo === "logo" ? "logoUrl" : "heroImageUrl";
+  const antigo = tipo === "logo" ? site.logoUrl : site.heroImageUrl;
+  await prisma.site.update({ where: { id: site.id }, data: { [campo]: null } });
+  if (antigo) await deletarImagem(antigo);
+  revalidatePath(`/admin/${slug}`);
+  revalidatePath(`/s/${slug}`);
 }
