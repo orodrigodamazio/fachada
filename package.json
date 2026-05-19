@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "migrate:dev": "bun --env-file=.env prisma migrate dev",
+    "migrate:deploy": "bunx prisma migrate deploy",
+    "db:studio": "bun --env-file=.env prisma studio"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
