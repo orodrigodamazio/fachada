@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   app:
-    image: ghcr.io/orodrigodamazio/fachada:local-1779226014
+    image: ghcr.io/orodrigodamazio/fachada:local-1779229239
     networks:
       - gmnet
     environment:
@@ -23,6 +23,7 @@ services:
       R2_BUCKET: ${R2_BUCKET:-}
       R2_PUBLIC_BASE_URL: ${R2_PUBLIC_BASE_URL:-}
       NEXT_PUBLIC_CDN_HOSTNAME: ${NEXT_PUBLIC_CDN_HOSTNAME:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
     deploy:
       replicas: 1
       update_config:
