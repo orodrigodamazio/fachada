@@ -1,3 +1,4 @@
+import Script from "next/script";
 import Link from "next/link";
 import Image from "next/image";
 import { carregarSitePorSlug, formatarCnpj, formatarEndereco, tituloEmpresa, type EnderecoJson } from "@/lib/site-loader";
@@ -48,8 +49,42 @@ export default async function SiteLayout({
   const base = `/s/${slug}`;
   const endereco = site.endereco as EnderecoJson;
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: site.razaoSocial,
+    alternateName: site.nomeFantasia ?? undefined,
+    description: site.metaDescription || site.sobre || undefined,
+    telephone: site.telefone ?? undefined,
+    email: site.emailContato ?? undefined,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: [endereco.logradouro, endereco.numero].filter(Boolean).join(", ") || undefined,
+      addressLocality: endereco.municipio ?? undefined,
+      addressRegion: endereco.uf ?? undefined,
+      postalCode: endereco.cep ?? undefined,
+      addressCountry: "BR",
+    },
+    taxID: site.cnpj,
+    image: site.logoUrl ?? site.heroImageUrl ?? undefined,
+    foundingDate: site.dataAbertura?.toISOString().slice(0, 10) ?? undefined,
+  };
+
   return (
     <div className="min-h-dvh flex flex-col bg-white text-zinc-900">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {site.metaPixel ? (
+        <>
+          <Script id="fb-pixel" strategy="afterInteractive">
+            {`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${site.metaPixel}');fbq('track','PageView');`}
+          </Script>
+          <noscript
+            dangerouslySetInnerHTML={{
+              __html: `<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=${site.metaPixel}&ev=PageView&noscript=1" />`,
+            }}
+          />
+        </>
+      ) : null}
       <header className="border-b border-zinc-200">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-6">
           <Link href={base} className="flex items-center gap-3 font-semibold tracking-tight text-lg">

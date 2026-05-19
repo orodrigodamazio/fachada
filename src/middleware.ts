@@ -77,11 +77,12 @@ export function middleware(req: NextRequest) {
   if (!sub) return NextResponse.next();
 
   const url = req.nextUrl.clone();
-  const PASS_THROUGH = ["/sitemap.xml", "/robots.txt"];
+  const PASS_THROUGH = ["/sitemap.xml", "/robots.txt", "/status"];
   if (
     url.pathname.startsWith("/s/") ||
     url.pathname.startsWith("/_next") ||
     url.pathname.startsWith("/api") ||
+    url.pathname.startsWith("/status") ||
     PASS_THROUGH.includes(url.pathname)
   ) {
     return NextResponse.next();
