@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { generateText, LLMError } from "@/lib/llm";
 import { uploadImagem, deletarImagem, R2Error } from "@/lib/r2";
 import { tituloEmpresa } from "@/lib/site-loader";
+import { log } from "@/lib/logger";
 
 export type EditState = { ok?: boolean; erro?: string } | undefined;
 export type IaResult = { ok: true; texto: string } | { ok: false; erro: string };
@@ -115,8 +116,10 @@ export async function uploadImagemAction(
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
     url = await uploadImagem({ buffer, contentType: file.type, slug, tipo });
+    log.info("imagem upload", { slug, tipo, size: buffer.byteLength, contentType: file.type });
   } catch (e) {
     const err = e as R2Error;
+    log.error("upload R2 falhou", { slug, tipo, code: err.code, msg: err.message });
     return { erro: err.message };
   }
 

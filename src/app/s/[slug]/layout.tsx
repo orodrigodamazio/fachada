@@ -49,11 +49,15 @@ export default async function SiteLayout({
   const base = `/s/${slug}`;
   const endereco = site.endereco as EnderecoJson;
 
-  const jsonLd = {
+  const temEnderecoCompleto = endereco.logradouro && endereco.municipio && endereco.uf;
+  const tipo = temEnderecoCompleto ? "LocalBusiness" : "Organization";
+
+  const jsonLd: Record<string, unknown> = {
     "@context": "https://schema.org",
-    "@type": "Organization",
+    "@type": tipo,
     name: site.razaoSocial,
     alternateName: site.nomeFantasia ?? undefined,
+    legalName: site.razaoSocial,
     description: site.metaDescription || site.sobre || undefined,
     telephone: site.telefone ?? undefined,
     email: site.emailContato ?? undefined,
@@ -66,9 +70,23 @@ export default async function SiteLayout({
       addressCountry: "BR",
     },
     taxID: site.cnpj,
+    identifier: { "@type": "PropertyValue", propertyID: "CNPJ", value: site.cnpj },
     image: site.logoUrl ?? site.heroImageUrl ?? undefined,
+    logo: site.logoUrl ?? undefined,
     foundingDate: site.dataAbertura?.toISOString().slice(0, 10) ?? undefined,
   };
+  if (tipo === "LocalBusiness") {
+    jsonLd.openingHoursSpecification = [
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        opens: "09:00",
+        closes: "18:00",
+      },
+    ];
+    jsonLd.areaServed = { "@type": "Country", name: "BR" };
+  }
+  Object.keys(jsonLd).forEach((k) => jsonLd[k] === undefined && delete jsonLd[k]);
 
   return (
     <div className="min-h-dvh flex flex-col bg-white text-zinc-900">

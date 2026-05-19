@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
+import { log } from "@/lib/logger";
 
 export type ContatoState =
   | { ok: true; mensagem: string }
@@ -47,6 +48,8 @@ export async function enviarContato(
       userAgent: h.get("user-agent")?.slice(0, 500) || null,
     },
   });
+
+  log.info("lead recebido", { slug, ip: ip === "unknown" ? "unknown" : ip.slice(0, 12) });
 
   revalidatePath(`/admin/${slug}/leads`);
   return { ok: true, mensagem: "Mensagem recebida. Em breve retornaremos." };

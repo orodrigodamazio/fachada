@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { consultarCnpj, limparCnpj, validarCnpj, gerarSlug, CnpjError } from "@/lib/cnpj";
+import { log } from "@/lib/logger";
 
 export type CriarSiteState = { erro?: string; campo?: string } | undefined;
 
@@ -20,6 +21,7 @@ export async function criarSite(_prev: CriarSiteState, formData: FormData): Prom
     receita = await consultarCnpj(cnpj);
   } catch (e) {
     const err = e as CnpjError;
+    log.warn("consultarCnpj falhou", { cnpj, code: err.code });
     const msg =
       err.code === "NAO_ENCONTRADO" ? "CNPJ não encontrado na base da Receita"
       : err.code === "RATE_LIMIT" ? "Muitas consultas. Tente em alguns segundos."
@@ -30,6 +32,8 @@ export async function criarSite(_prev: CriarSiteState, formData: FormData): Prom
   }
 
   const slug = gerarSlug(receita.razao_social, cnpj);
+
+  log.info("site criado", { cnpj, slug, razao: receita.razao_social });
 
   await prisma.site.create({
     data: {
