@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   app:
-    image: ghcr.io/orodrigodamazio/fachada:latest
+    image: ghcr.io/orodrigodamazio/fachada:local-1779225266
     networks:
       - gmnet
     environment:
@@ -10,8 +10,13 @@ services:
       PORT: "3000"
       HOSTNAME: "0.0.0.0"
       DATABASE_URL: ${DATABASE_URL}
-      NEXT_PUBLIC_ROOT_DOMAIN: ${NEXT_PUBLIC_ROOT_DOMAIN}
+      NEXT_PUBLIC_ROOT_DOMAINS: ${NEXT_PUBLIC_ROOT_DOMAINS}
       NEXT_PUBLIC_APP_HOSTS: ${NEXT_PUBLIC_APP_HOSTS}
+      ADMIN_USER: ${ADMIN_USER}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-}
     deploy:
       replicas: 1
       update_config:
@@ -32,17 +37,41 @@ services:
         traefik.docker.network: "gmnet"
         traefik.http.services.fachada-app.loadbalancer.server.port: "3000"
 
-        traefik.http.routers.fachada-apex.entrypoints: "websecure"
-        traefik.http.routers.fachada-apex.rule: "Host(`${ROOT_DOMAIN}`) || Host(`www.${ROOT_DOMAIN}`) || Host(`admin.${ROOT_DOMAIN}`)"
-        traefik.http.routers.fachada-apex.tls: "true"
-        traefik.http.routers.fachada-apex.tls.certresolver: "letsencryptresolver"
-        traefik.http.routers.fachada-apex.service: "fachada-app"
+        traefik.http.routers.fachada-apex-a.entrypoints: "websecure"
+        traefik.http.routers.fachada-apex-a.rule: "Host(`${ROOT_DOMAIN_A}`) || Host(`www.${ROOT_DOMAIN_A}`)"
+        traefik.http.routers.fachada-apex-a.tls: "true"
+        traefik.http.routers.fachada-apex-a.tls.certresolver: "letsencryptresolver"
+        traefik.http.routers.fachada-apex-a.service: "fachada-app"
 
-        traefik.http.routers.fachada-wild.entrypoints: "websecure"
-        traefik.http.routers.fachada-wild.rule: "HostRegexp(`^[a-z0-9-]+\\.${ROOT_DOMAIN_ESCAPED}$$`)"
-        traefik.http.routers.fachada-wild.tls: "true"
-        traefik.http.routers.fachada-wild.tls.certresolver: "letsencryptresolver"
-        traefik.http.routers.fachada-wild.service: "fachada-app"
+        traefik.http.routers.fachada-admin-a.entrypoints: "websecure"
+        traefik.http.routers.fachada-admin-a.rule: "Host(`admin.${ROOT_DOMAIN_A}`)"
+        traefik.http.routers.fachada-admin-a.tls: "true"
+        traefik.http.routers.fachada-admin-a.tls.certresolver: "letsencryptresolver"
+        traefik.http.routers.fachada-admin-a.service: "fachada-app"
+
+        traefik.http.routers.fachada-wild-a.entrypoints: "websecure"
+        traefik.http.routers.fachada-wild-a.rule: "HostRegexp(`^[a-z0-9-]+\\.${ROOT_DOMAIN_A_ESCAPED}$$`)"
+        traefik.http.routers.fachada-wild-a.tls: "true"
+        traefik.http.routers.fachada-wild-a.tls.certresolver: "letsencryptresolver"
+        traefik.http.routers.fachada-wild-a.service: "fachada-app"
+
+        traefik.http.routers.fachada-apex-b.entrypoints: "websecure"
+        traefik.http.routers.fachada-apex-b.rule: "Host(`${ROOT_DOMAIN_B}`) || Host(`www.${ROOT_DOMAIN_B}`)"
+        traefik.http.routers.fachada-apex-b.tls: "true"
+        traefik.http.routers.fachada-apex-b.tls.certresolver: "letsencryptresolver"
+        traefik.http.routers.fachada-apex-b.service: "fachada-app"
+
+        traefik.http.routers.fachada-admin-b.entrypoints: "websecure"
+        traefik.http.routers.fachada-admin-b.rule: "Host(`admin.${ROOT_DOMAIN_B}`)"
+        traefik.http.routers.fachada-admin-b.tls: "true"
+        traefik.http.routers.fachada-admin-b.tls.certresolver: "letsencryptresolver"
+        traefik.http.routers.fachada-admin-b.service: "fachada-app"
+
+        traefik.http.routers.fachada-wild-b.entrypoints: "websecure"
+        traefik.http.routers.fachada-wild-b.rule: "HostRegexp(`^[a-z0-9-]+\\.${ROOT_DOMAIN_B_ESCAPED}$$`)"
+        traefik.http.routers.fachada-wild-b.tls: "true"
+        traefik.http.routers.fachada-wild-b.tls.certresolver: "letsencryptresolver"
+        traefik.http.routers.fachada-wild-b.service: "fachada-app"
 
 networks:
   gmnet:

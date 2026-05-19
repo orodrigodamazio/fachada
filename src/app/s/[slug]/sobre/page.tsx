@@ -23,7 +23,7 @@ export default async function SobrePage({ params }: { params: Promise<{ slug: st
           {site.sobre ||
             `A ${site.razaoSocial} é uma empresa ${site.cnaeDescricao ? `do segmento de ${site.cnaeDescricao.toLowerCase()}` : "de atuação consolidada em seu setor"}, ` +
               (dataAbertura ? `fundada em ${dataAbertura}` : "com presença no mercado") +
-              `${tempo && tempo > 0 ? ` — são ${tempo} ${tempo === 1 ? "ano" : "anos"} de trajetória` : ""}.`}
+              `${tempo && tempo > 0 ? `. São ${tempo} ${tempo === 1 ? "ano" : "anos"} de trajetória` : ""}.`}
         </p>
         <p>
           Acreditamos que cada cliente merece atenção genuína. Por isso, mantemos uma operação enxuta e

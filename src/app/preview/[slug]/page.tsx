@@ -30,7 +30,7 @@ export default async function PreviewPage({ params }: { params: Promise<{ slug: 
     e.bairro,
     [e.municipio, e.uf].filter(Boolean).join(" / "),
     e.cep,
-  ].filter(Boolean).join(" — ");
+  ].filter(Boolean).join(" · ");
 
   return (
     <div className="min-h-dvh bg-zinc-50 dark:bg-zinc-950 px-4 py-10">
@@ -53,7 +53,7 @@ export default async function PreviewPage({ params }: { params: Promise<{ slug: 
             <Info rotulo="Razão social" valor={site.razaoSocial} />
             <Info rotulo="Nome fantasia" valor={site.nomeFantasia} />
             <Info rotulo="Slug do site" valor={site.slug} />
-            <Info rotulo="CNAE" valor={[site.cnaeFiscal, site.cnaeDescricao].filter(Boolean).join(" — ")} />
+            <Info rotulo="CNAE" valor={[site.cnaeFiscal, site.cnaeDescricao].filter(Boolean).join(" · ")} />
             <Info rotulo="Capital social" valor={site.capitalSocial ? `R$ ${site.capitalSocial.toString()}` : null} />
             <Info rotulo="Abertura" valor={site.dataAbertura?.toISOString().slice(0, 10) ?? null} />
           </CardContent>

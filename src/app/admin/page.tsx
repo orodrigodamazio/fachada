@@ -70,7 +70,7 @@ export default async function AdminHome() {
                           </span>
                         </span>
                       ) : (
-                        <span className="text-zinc-400">— subdomínio padrão</span>
+                        <span className="text-zinc-400">subdomínio padrão</span>
                       )}
                     </td>
                     <td className="px-4 py-3">{s._count.leads}</td>

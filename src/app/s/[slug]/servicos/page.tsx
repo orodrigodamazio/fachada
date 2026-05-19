@@ -45,7 +45,7 @@ export default async function ServicosPage({ params }: { params: Promise<{ slug:
 
       <section className="border-t border-zinc-200 pt-8">
         <p className="text-zinc-600 leading-relaxed">
-          Quer entender se atendemos uma demanda específica? Mande uma mensagem na página de contato — respondemos em até um dia útil.
+          Quer entender se atendemos uma demanda específica? Mande uma mensagem na página de contato. Respondemos em até um dia útil.
         </p>
       </section>
     </article>

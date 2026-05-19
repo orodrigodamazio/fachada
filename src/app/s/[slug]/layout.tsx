@@ -7,7 +7,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const titulo = site.metaTitle || tituloEmpresa(site.razaoSocial, site.nomeFantasia);
   const descricao =
     site.metaDescription ||
-    `${tituloEmpresa(site.razaoSocial, site.nomeFantasia)}${site.cnaeDescricao ? ` — ${site.cnaeDescricao}` : " — site institucional"}.`;
+    `${tituloEmpresa(site.razaoSocial, site.nomeFantasia)}${site.cnaeDescricao ? `. ${site.cnaeDescricao}` : ". Site institucional"}.`;
 
   return {
     title: { default: titulo, template: `%s | ${titulo}` },

@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from "@/lib/rate-limit";
 
 export type ContatoState =
   | { ok: true; mensagem: string }
@@ -26,10 +27,15 @@ export async function enviarContato(
   if (mensagem.length > 5000) return { ok: false, erro: "Mensagem muito longa." };
   if (nome.length > 200) return { ok: false, erro: "Nome muito longo." };
 
+  const h = await headers();
+  const ip = h.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
+  const rl = rateLimit(`contato:${slug}:${ip}`, 5, 15 * 60_000);
+  if (!rl.ok) {
+    return { ok: false, erro: `Muitas tentativas. Tente novamente em ${rl.retryAfterSec}s.` };
+  }
+
   const site = await prisma.site.findUnique({ where: { slug }, select: { id: true } });
   if (!site) return { ok: false, erro: "Site não encontrado." };
-
-  const h = await headers();
   await prisma.lead.create({
     data: {
       siteId: site.id,
@@ -37,7 +43,7 @@ export async function enviarContato(
       email: email || null,
       telefone: telefone || null,
       mensagem,
-      ip: h.get("x-forwarded-for")?.split(",")[0].trim() || null,
+      ip: ip === "unknown" ? null : ip,
       userAgent: h.get("user-agent")?.slice(0, 500) || null,
     },
   });

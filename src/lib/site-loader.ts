@@ -41,7 +41,7 @@ export function formatarEndereco(e: EnderecoJson) {
     e.cep ? `CEP ${e.cep}` : null,
   ]
     .filter(Boolean)
-    .join(" — ");
+    .join(" · ");
 }
 
 export function tituloEmpresa(razaoSocial: string, nomeFantasia: string | null) {
