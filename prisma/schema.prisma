@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Site {
+  id              String   @id @default(cuid())
+
+  cnpj            String   @unique
+  razaoSocial     String
+  nomeFantasia    String?
+  endereco        Json
+  telefone        String?
+  emailContato    String?
+  cnaeFiscal      String?
+  cnaeDescricao   String?
+  capitalSocial   Decimal?
+  dataAbertura    DateTime?
+  socios          Json?
+  receitaRaw      Json
+
+  slug            String   @unique
+
+  heroTitulo      String?
+  heroSubtitulo   String?
+  sobre           String?
+  missao          String?
+  visao           String?
+  servicos        Json?
+  rodape          String?
+
+  dominioProprio  String?  @unique
+  dominioStatus   DominioStatus @default(NAO_CADASTRADO)
+  dominioVerifEm  DateTime?
+  cnameAlvo       String?
+
+  emailHandle     String?
+  emailForwardTo  String?
+  emailStatus     EmailStatus @default(NAO_CONFIGURADO)
+  emailVerifEm    DateTime?
+  mxRecords       Json?
+  spfRecord       String?
+
+  metaTitle       String?
+  metaDescription String?
+  metaPixel       String?
+
+  ativo           Boolean  @default(true)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([slug])
+  @@index([dominioProprio])
+  @@index([cnpj])
+}
+
+enum DominioStatus {
+  NAO_CADASTRADO
+  PENDENTE_DNS
+  VERIFICADO
+  FALHA
+}
+
+enum EmailStatus {
+  NAO_CONFIGURADO
+  PENDENTE_MX
+  VERIFICADO
+  FALHA
+}
