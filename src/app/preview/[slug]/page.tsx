@@ -17,10 +17,16 @@ type EnderecoJson = {
 
 type SocioJson = { nome_socio: string; qualificacao_socio: string };
 
+const ROOT = (process.env.NEXT_PUBLIC_ROOT_DOMAINS ?? "vertentebr.com.br").split(",")[0].trim();
+
 export default async function PreviewPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const site = await prisma.site.findUnique({ where: { slug } });
   if (!site) notFound();
+
+  const urlPublica = site.dominioProprio && site.dominioStatus === "VERIFICADO"
+    ? `https://${site.dominioProprio}`
+    : `https://${site.slug}.${ROOT}`;
 
   const e = site.endereco as EnderecoJson;
   const socios = (site.socios ?? []) as SocioJson[];
@@ -86,9 +92,27 @@ export default async function PreviewPage({ params }: { params: Promise<{ slug: 
           </Card>
         ) : null}
 
-        <p className="text-xs text-zinc-500 text-center">
-          Site público vai sair em: <code>{site.slug}.[seu-dominio]</code> (configurar wildcard no Sprint 6)
-        </p>
+        <div className="flex flex-col items-center gap-3 pt-2">
+          <p className="text-sm text-zinc-600 text-center">
+            Site público no ar em:
+          </p>
+          <a
+            href={urlPublica}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium underline underline-offset-4 break-all text-center"
+          >
+            {urlPublica}
+          </a>
+          <div className="flex gap-3 pt-1">
+            <Button asChild>
+              <a href={urlPublica} target="_blank" rel="noopener noreferrer">Ver site</a>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href={`/admin/${site.slug}`}>Editar no painel</Link>
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -36,10 +36,43 @@ function timingSafeEqual(a: string, b: string): boolean {
   return r === 0;
 }
 
+const MAX_FALHAS = 10;
+const JANELA_MS = 15 * 60_000;
+const tentativas = new Map<string, { count: number; resetAt: number }>();
+
+function registrarFalha(ip: string): number {
+  const now = Date.now();
+  const b = tentativas.get(ip);
+  if (!b || now > b.resetAt) {
+    tentativas.set(ip, { count: 1, resetAt: now + JANELA_MS });
+    return 1;
+  }
+  b.count++;
+  return b.count;
+}
+
+function bloqueado(ip: string): { bloqueado: boolean; retryAfter: number } {
+  const b = tentativas.get(ip);
+  if (!b || Date.now() > b.resetAt) return { bloqueado: false, retryAfter: 0 };
+  if (b.count >= MAX_FALHAS) return { bloqueado: true, retryAfter: Math.ceil((b.resetAt - Date.now()) / 1000) };
+  return { bloqueado: false, retryAfter: 0 };
+}
+
+function limparSucesso(ip: string) {
+  tentativas.delete(ip);
+}
+
 function challenge() {
   return new NextResponse("Auth required", {
     status: 401,
     headers: { "WWW-Authenticate": 'Basic realm="Fachada Admin", charset="UTF-8"' },
+  });
+}
+
+function tooManyRequests(retryAfter: number) {
+  return new NextResponse("Muitas tentativas. Tente mais tarde.", {
+    status: 429,
+    headers: { "Retry-After": String(retryAfter) },
   });
 }
 
@@ -67,7 +100,18 @@ export function middleware(req: NextRequest) {
   const isAdminPath = pathname === "/admin" || pathname.startsWith("/admin/");
 
   if (isAdminHost || isAdminPath) {
-    if (!checkAdminAuth(req.headers.get("authorization"))) return challenge();
+    const ip =
+      req.headers.get("cf-connecting-ip") ||
+      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+      "unknown";
+    const bloq = bloqueado(ip);
+    if (bloq.bloqueado) return tooManyRequests(bloq.retryAfter);
+
+    if (!checkAdminAuth(req.headers.get("authorization"))) {
+      registrarFalha(ip);
+      return challenge();
+    }
+    limparSucesso(ip);
   }
 
   if (APP_HOSTS.has(host)) return NextResponse.next();

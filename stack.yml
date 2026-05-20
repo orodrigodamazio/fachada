@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   app:
-    image: ghcr.io/orodrigodamazio/fachada:local-1779235253
+    image: ghcr.io/orodrigodamazio/fachada:local-1779241601
     networks:
       - gmnet
     environment:
@@ -45,6 +45,11 @@ services:
         traefik.docker.network: "gmnet"
         traefik.http.services.fachada-app.loadbalancer.server.port: "3000"
 
+        traefik.http.middlewares.fachada-adminrl.ratelimit.average: "30"
+        traefik.http.middlewares.fachada-adminrl.ratelimit.burst: "15"
+        traefik.http.middlewares.fachada-adminrl.ratelimit.period: "1m"
+        traefik.http.middlewares.fachada-adminrl.ratelimit.sourcecriterion.requestheadername: "cf-connecting-ip"
+
         traefik.http.routers.fachada-apex.entrypoints: "websecure"
         traefik.http.routers.fachada-apex.rule: "Host(`${ROOT_DOMAIN}`) || Host(`www.${ROOT_DOMAIN}`)"
         traefik.http.routers.fachada-apex.tls: "true"
@@ -56,6 +61,7 @@ services:
         traefik.http.routers.fachada-admin.tls: "true"
         traefik.http.routers.fachada-admin.tls.certresolver: "letsencryptresolver"
         traefik.http.routers.fachada-admin.service: "fachada-app"
+        traefik.http.routers.fachada-admin.middlewares: "fachada-adminrl"
 
         traefik.http.routers.fachada-wild.entrypoints: "websecure"
         traefik.http.routers.fachada-wild.rule: "HostRegexp(`^[a-z0-9-]+\\.${ROOT_DOMAIN_ESCAPED}$$`)"
