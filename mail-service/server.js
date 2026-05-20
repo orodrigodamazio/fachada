@@ -40,8 +40,16 @@ const server = new SMTPServer({
   disabledCommands: ["AUTH"],
   size: MAX_SIZE,
   banner: "vertente-mail",
+  onConnect(session, cb) {
+    console.log("conn de", session.remoteAddress);
+    cb();
+  },
   onRcptTo(address, _session, cb) {
-    if (!aceita(address.address)) return cb(new Error("550 5.7.1 relay not permitted"));
+    if (!aceita(address.address)) {
+      console.log("rcpt REJEITADO:", address.address);
+      return cb(new Error("550 5.7.1 relay not permitted"));
+    }
+    console.log("rcpt aceito:", address.address);
     cb();
   },
   onData(stream, session, cb) {
