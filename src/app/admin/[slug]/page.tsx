@@ -6,6 +6,7 @@ import { EditForm } from "./edit-form";
 import { UploadImagem } from "./upload-imagem";
 import { DominioForm } from "./dominio-form";
 import { EmailForm } from "./email-form";
+import { TrackingForm } from "./tracking-form";
 import { alternarAtivo, deletarSite } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -75,6 +76,13 @@ export default async function AdminSite({ params }: { params: Promise<{ slug: st
           emailForwardTo={site.emailForwardTo}
           status={site.emailStatus}
           verificadoEm={site.emailVerifEm}
+        />
+
+        <TrackingForm
+          slug={site.slug}
+          metaPixel={site.metaPixel}
+          metaCapiToken={site.metaCapiToken}
+          gaId={site.gaId}
         />
 
         <EditForm

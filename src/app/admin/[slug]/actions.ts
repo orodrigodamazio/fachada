@@ -63,6 +63,9 @@ export async function gerarTextoIA(slug: string, campo: string): Promise<IaResul
 const CAMPOS_TEXTO = ["heroTitulo", "heroSubtitulo", "sobre", "missao", "visao", "rodape", "metaTitle", "metaDescription"] as const;
 type CampoTexto = (typeof CAMPOS_TEXTO)[number];
 
+const CAMPOS_TRACKING = ["metaPixel", "metaCapiToken", "gaId"] as const;
+type CampoTracking = (typeof CAMPOS_TRACKING)[number];
+
 export async function salvarTextos(slug: string, _prev: EditState, formData: FormData): Promise<EditState> {
   const site = await prisma.site.findUnique({ where: { slug }, select: { id: true } });
   if (!site) return { erro: "Site não encontrado" };
@@ -73,6 +76,33 @@ export async function salvarTextos(slug: string, _prev: EditState, formData: For
     if (v !== null) {
       const s = String(v).trim();
       data[c] = s ? s.slice(0, 5000) : null;
+    }
+  }
+
+  await prisma.site.update({ where: { id: site.id }, data });
+  revalidatePath(`/admin/${slug}`);
+  revalidatePath(`/s/${slug}`);
+  return { ok: true };
+}
+
+export type TrackingState = { ok?: true; erro?: string } | undefined;
+
+export async function salvarTracking(
+  slug: string,
+  _prev: TrackingState,
+  formData: FormData,
+): Promise<TrackingState> {
+  const site = await prisma.site.findUnique({ where: { slug }, select: { id: true } });
+  if (!site) return { erro: "Site não encontrado" };
+
+  const data: Partial<Record<CampoTracking, string | null>> = {};
+  for (const c of CAMPOS_TRACKING) {
+    const v = formData.get(c);
+    if (v !== null) {
+      const s = String(v).trim();
+      if (s && c === "metaPixel" && !/^\d{6,20}$/.test(s)) return { erro: "Pixel ID deve ser numérico" };
+      if (s && c === "gaId" && !/^(G-|UA-|GTM-)[A-Z0-9-]+$/i.test(s)) return { erro: "GA ID inválido (use G-XXX, UA-XXX ou GTM-XXX)" };
+      data[c] = s || null;
     }
   }
 

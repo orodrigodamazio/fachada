@@ -6,10 +6,10 @@ const baseCSP = [
   "default-src 'self'",
   `img-src 'self' data: blob: https:${cdn ? ` https://${cdn}` : ""}`,
   "font-src 'self' data:",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net https://www.facebook.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net https://www.facebook.com https://www.googletagmanager.com https://www.google-analytics.com",
   "style-src 'self' 'unsafe-inline'",
-  "connect-src 'self' https://connect.facebook.net https://www.facebook.com https://o4511106974679040.ingest.us.sentry.io",
-  "frame-src 'self' https://www.facebook.com",
+  "connect-src 'self' https://connect.facebook.net https://www.facebook.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://o4511106974679040.ingest.us.sentry.io",
+  "frame-src 'self' https://www.facebook.com https://www.googletagmanager.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -19,7 +19,7 @@ const baseCSP = [
 
 const securityHeaders = [
   { key: "Content-Security-Policy", value: baseCSP },
-  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+  { key: "Strict-Transport-Security", value: "max-age=31536000" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "SAMEORIGIN" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },

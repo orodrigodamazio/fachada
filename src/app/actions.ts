@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { consultarCnpj, limparCnpj, validarCnpj, gerarSlug, CnpjError } from "@/lib/cnpj";
 import { log } from "@/lib/logger";
+import { prewarmSite } from "@/lib/prewarm";
 
 export type CriarSiteState = { erro?: string; campo?: string } | undefined;
 
@@ -60,6 +61,8 @@ export async function criarSite(_prev: CriarSiteState, formData: FormData): Prom
       receitaRaw: receita as unknown as object,
     },
   });
+
+  await prewarmSite(slug).catch(() => false);
 
   redirect(`/preview/${slug}`);
 }

@@ -67,6 +67,8 @@ model Site {
   metaTitle       String?
   metaDescription String?
   metaPixel       String?
+  metaCapiToken   String?
+  gaId            String?
 
   ativo           Boolean  @default(true)
 

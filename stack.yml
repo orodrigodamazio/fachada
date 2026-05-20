@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   app:
-    image: ghcr.io/orodrigodamazio/fachada:local-1779232109
+    image: ghcr.io/orodrigodamazio/fachada:local-1779235253
     networks:
       - gmnet
     environment:
