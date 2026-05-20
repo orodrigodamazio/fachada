@@ -42,6 +42,20 @@ export async function criarSite(_prev: CriarSiteState, formData: FormData): Prom
   const slug = gerarSlug(receita.razao_social, cnpj);
   const paleta = gerarPaletaSeed(`${receita.razao_social}|${cnpj}`);
 
+  // Pré-preenchimento automático a partir do cartão CNPJ (sem IA). Usuário ajusta no editor.
+  const nomeEmpresa = receita.nome_fantasia?.trim() || receita.razao_social;
+  const seg = receita.cnae_fiscal_descricao;
+  const cidade = receita.municipio;
+  const anoAb = receita.data_inicio_atividade ? new Date(receita.data_inicio_atividade).getFullYear() : null;
+  const conteudo = {
+    heroTitulo: nomeEmpresa,
+    heroSubtitulo: seg ? `${seg}${cidade ? ` em ${cidade}` : ""}.` : "Compromisso, qualidade e atendimento próximo em tudo que entregamos.",
+    sobre: `A ${receita.razao_social} atua${seg ? ` em ${seg.toLowerCase()}` : " em seu segmento"}${anoAb ? `, em atividade desde ${anoAb}` : ""}. Construímos relações duradouras com clientes e parceiros, sustentadas por compromisso, transparência e qualidade no que entregamos.`,
+    missao: "Oferecer soluções consistentes e atendimento próximo, com responsabilidade e cuidado em cada etapa da relação com nossos clientes.",
+    horarioAtend: "Segunda a sexta, das 9h às 18h",
+    whatsapp: receita.ddd_telefone_1 || null,
+  };
+
   log.info("site criado", { cnpj, slug, razao: receita.razao_social });
 
   await prisma.site.create({
@@ -52,6 +66,12 @@ export async function criarSite(_prev: CriarSiteState, formData: FormData): Prom
       slug,
       corPrimaria: paleta.primaria,
       corSecundaria: paleta.secundaria,
+      heroTitulo: conteudo.heroTitulo,
+      heroSubtitulo: conteudo.heroSubtitulo,
+      sobre: conteudo.sobre,
+      missao: conteudo.missao,
+      horarioAtend: conteudo.horarioAtend,
+      whatsapp: conteudo.whatsapp,
       razaoSocial: receita.razao_social,
       nomeFantasia: receita.nome_fantasia,
       endereco: {
