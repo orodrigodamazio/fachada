@@ -117,9 +117,6 @@ export function middleware(req: NextRequest) {
   if (APP_HOSTS.has(host)) return NextResponse.next();
   if (host === "localhost" || /^\d+\.\d+\.\d+\.\d+$/.test(host)) return NextResponse.next();
 
-  const sub = matchSub(host);
-  if (!sub) return NextResponse.next();
-
   const url = req.nextUrl.clone();
   const PASS_THROUGH = ["/sitemap.xml", "/robots.txt", "/status"];
   if (
@@ -131,8 +128,21 @@ export function middleware(req: NextRequest) {
   ) {
     return NextResponse.next();
   }
-  url.pathname = `/s/${sub}${url.pathname === "/" ? "" : url.pathname}`;
-  return NextResponse.rewrite(url);
+
+  const sub = matchSub(host);
+  const isKnownRoot = ROOT_DOMAINS.some((r) => host === r || host === `www.${r}`);
+
+  // subdomínio do nosso domínio → /s/<sub>
+  if (sub) {
+    url.pathname = `/s/${sub}${url.pathname === "/" ? "" : url.pathname}`;
+    return NextResponse.rewrite(url);
+  }
+  // domínio próprio do cliente (Cloudflare for SaaS) → /s/<host>, loader resolve por dominioProprio
+  if (!isKnownRoot && host.includes(".")) {
+    url.pathname = `/s/${encodeURIComponent(host)}${url.pathname === "/" ? "" : url.pathname}`;
+    return NextResponse.rewrite(url);
+  }
+  return NextResponse.next();
 }
 
 export const config = {

@@ -14,8 +14,11 @@ export type EnderecoJson = {
 
 export type SocioJson = { nome_socio: string; qualificacao_socio: string };
 
-export const carregarSitePorSlug = cache(async (slug: string) => {
-  const site = await prisma.site.findUnique({ where: { slug } });
+export const carregarSitePorSlug = cache(async (slugOrDomain: string) => {
+  const id = decodeURIComponent(slugOrDomain).toLowerCase();
+  const site = id.includes(".")
+    ? await prisma.site.findFirst({ where: { dominioProprio: id, dominioStatus: "VERIFICADO" } })
+    : await prisma.site.findUnique({ where: { slug: id } });
   if (!site || !site.ativo) notFound();
   return site;
 });

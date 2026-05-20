@@ -8,6 +8,7 @@ import { uploadImagem, deletarImagem, R2Error } from "@/lib/r2";
 import { tituloEmpresa } from "@/lib/site-loader";
 import { log } from "@/lib/logger";
 import { verificarCname, verificarMX, validarDominio, alvoCNAME, MX_CLOUDFLARE, SPF_CLOUDFLARE } from "@/lib/dns-verify";
+import { adicionarCustomHostname, removerCustomHostname, statusCustomHostname, saasConfigurado, fallbackTarget } from "@/lib/cloudflare-saas";
 
 export type EditState = { ok?: boolean; erro?: string } | undefined;
 export type IaResult = { ok: true; texto: string } | { ok: false; erro: string };
@@ -179,6 +180,12 @@ export async function salvarDominioProprio(
   const dominio = raw.replace(/^https?:\/\//, "").replace(/\/.*/, "");
 
   if (!dominio) {
+    const atual = await prisma.site.findUnique({ where: { slug }, select: { dominioProprio: true } });
+    if (atual?.dominioProprio && saasConfigurado()) {
+      await removerCustomHostname(atual.dominioProprio).catch((e) =>
+        log.warn("falha remover custom hostname", { slug, erro: (e as Error).message }),
+      );
+    }
     await prisma.site.update({
       where: { slug },
       data: { dominioProprio: null, dominioStatus: "NAO_CADASTRADO", dominioVerifEm: null, cnameAlvo: null },
@@ -189,12 +196,25 @@ export async function salvarDominioProprio(
 
   if (!validarDominio(dominio)) return { ok: false, erro: "Domínio inválido" };
 
-  const alvo = alvoCNAME();
   const existente = await prisma.site.findFirst({
     where: { dominioProprio: dominio, NOT: { slug } },
     select: { slug: true },
   });
   if (existente) return { ok: false, erro: `Domínio já cadastrado em outro site (${existente.slug})` };
+
+  // Cloudflare for SaaS: CNAME aponta pro fallback CF, que emite cert automático.
+  // Fallback (sem SaaS): CNAME aponta pro nosso domínio, Let's Encrypt manual.
+  let alvo = alvoCNAME();
+  if (saasConfigurado()) {
+    try {
+      await adicionarCustomHostname(dominio);
+      alvo = fallbackTarget();
+      log.info("custom hostname CF criado", { slug, dominio });
+    } catch (e) {
+      log.error("falha criar custom hostname", { slug, dominio, erro: (e as Error).message });
+      return { ok: false, erro: "Falha ao registrar domínio no Cloudflare. Tente novamente." };
+    }
+  }
 
   await prisma.site.update({
     where: { slug },
@@ -212,6 +232,26 @@ export async function verificarDominioAcao(slug: string): Promise<DominioState> 
   });
   if (!site || !site.dominioProprio || !site.cnameAlvo) {
     return { ok: false, erro: "Sem domínio cadastrado" };
+  }
+
+  // Com CF for SaaS: status vem do Cloudflare (ownership + SSL). Senão: CNAME tradicional.
+  if (saasConfigurado()) {
+    const st = await statusCustomHostname(site.dominioProprio).catch(() => null);
+    if (st?.ativo) {
+      await prisma.site.update({
+        where: { id: site.id },
+        data: { dominioStatus: "VERIFICADO", dominioVerifEm: new Date() },
+      });
+      log.info("dominio verificado (CF SaaS)", { slug, dominio: site.dominioProprio });
+      revalidatePath(`/admin/${slug}`);
+      return { ok: true, status: "VERIFICADO" };
+    }
+    await prisma.site.update({
+      where: { id: site.id },
+      data: { dominioStatus: "PENDENTE_DNS", dominioVerifEm: new Date() },
+    });
+    revalidatePath(`/admin/${slug}`);
+    return { ok: false, erro: `Cloudflare: SSL ${st?.sslStatus ?? "pendente"}, status ${st?.status ?? "?"}. Configure o CNAME e aguarde.` };
   }
 
   const r = await verificarCname(site.dominioProprio, site.cnameAlvo);
