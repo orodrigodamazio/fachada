@@ -12,8 +12,9 @@ export default async function ContatoPage({ params }: { params: Promise<{ slug: 
     <article className="max-w-5xl mx-auto px-6 py-20 grid gap-12 md:grid-cols-5">
       <section className="md:col-span-2 space-y-6">
         <header className="space-y-3">
-          <p className="text-xs font-semibold tracking-widest text-zinc-500 uppercase">Contato</p>
+          <p className="text-xs font-semibold tracking-widest uppercase text-[var(--cor-primaria)]">Contato</p>
           <h1 className="text-4xl font-semibold tracking-tight">Fale com a {titulo}</h1>
+          <div className="h-1 w-16 rounded-full" style={{ background: "linear-gradient(90deg, var(--cor-primaria), var(--cor-secundaria))" }} />
         </header>
         <p className="text-zinc-600 leading-relaxed">
           Atendemos de segunda a sexta, das 9h às 18h. Para propostas, dúvidas comerciais e suporte,
@@ -54,7 +55,7 @@ export default async function ContatoPage({ params }: { params: Promise<{ slug: 
 
 function Bloco({ rotulo, valor, href }: { rotulo: string; valor: string; href?: string }) {
   return (
-    <div className="border-l-2 border-zinc-300 pl-4">
+    <div className="border-l-2 pl-4" style={{ borderLeftColor: "var(--cor-primaria)" }}>
       <dt className="text-zinc-500 text-xs uppercase tracking-wider">{rotulo}</dt>
       <dd className="text-zinc-800">
         {href ? (

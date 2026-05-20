@@ -13,14 +13,15 @@ export default async function ServicosPage({ params }: { params: Promise<{ slug:
   return (
     <article className="max-w-4xl mx-auto px-6 py-20 space-y-10">
       <header className="space-y-3">
-        <p className="text-xs font-semibold tracking-widest text-zinc-500 uppercase">Serviços</p>
+        <p className="text-xs font-semibold tracking-widest uppercase text-[var(--cor-primaria)]">Serviços</p>
         <h1 className="text-4xl font-semibold tracking-tight">O que a {titulo} oferece</h1>
+        <div className="h-1 w-16 rounded-full" style={{ background: "linear-gradient(90deg, var(--cor-primaria), var(--cor-secundaria))" }} />
       </header>
 
       {site.cnaeDescricao ? (
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold">Atividade principal</h2>
-          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-6">
+          <h2 className="text-xl font-semibold border-l-4 border-[var(--cor-primaria)] pl-3">Atividade principal</h2>
+          <div className="rounded-lg border border-zinc-200 bg-white p-6 border-l-4" style={{ borderLeftColor: "var(--cor-primaria)" }}>
             <p className="text-lg text-zinc-900">{site.cnaeDescricao}</p>
             {site.cnaeFiscal ? (
               <p className="text-sm text-zinc-500 mt-2">CNAE {site.cnaeFiscal}</p>
@@ -31,10 +32,11 @@ export default async function ServicosPage({ params }: { params: Promise<{ slug:
 
       {secundarios.length > 0 ? (
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold">Outras frentes de atuação</h2>
+          <h2 className="text-xl font-semibold border-l-4 border-[var(--cor-primaria)] pl-3">Outras frentes de atuação</h2>
           <div className="grid gap-3 md:grid-cols-2">
             {secundarios.map((c) => (
-              <div key={c.codigo} className="rounded-lg border border-zinc-200 p-5">
+              <div key={c.codigo} className="rounded-lg border border-zinc-200 p-5 hover:shadow-sm transition-shadow">
+                <div className="h-1 w-8 rounded-full mb-3" style={{ background: "var(--cor-primaria)" }} />
                 <p className="text-zinc-800">{c.descricao}</p>
                 <p className="text-xs text-zinc-500 mt-2">CNAE {c.codigo}</p>
               </div>

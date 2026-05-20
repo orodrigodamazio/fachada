@@ -9,8 +9,9 @@ export default async function PrivacidadePage({ params }: { params: Promise<{ sl
   return (
     <article className="max-w-3xl mx-auto px-6 py-20 space-y-8 text-zinc-800 leading-relaxed">
       <header className="space-y-2">
-        <p className="text-xs font-semibold tracking-widest text-zinc-500 uppercase">Política</p>
+        <p className="text-xs font-semibold tracking-widest uppercase text-[var(--cor-primaria)]">Política</p>
         <h1 className="text-4xl font-semibold tracking-tight">Política de Privacidade</h1>
+        <div className="h-1 w-16 rounded-full" style={{ background: "linear-gradient(90deg, var(--cor-primaria), var(--cor-secundaria))" }} />
         <p className="text-sm text-zinc-500">
           Última atualização: {new Date().toLocaleDateString("pt-BR")}
         </p>
@@ -82,7 +83,7 @@ export default async function PrivacidadePage({ params }: { params: Promise<{ sl
 function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
     <section className="space-y-3">
-      <h2 className="text-xl font-semibold">{titulo}</h2>
+      <h2 className="text-xl font-semibold border-l-4 border-[var(--cor-primaria)] pl-3">{titulo}</h2>
       <div className="space-y-2">{children}</div>
     </section>
   );

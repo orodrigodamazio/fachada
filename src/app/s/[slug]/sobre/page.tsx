@@ -14,8 +14,9 @@ export default async function SobrePage({ params }: { params: Promise<{ slug: st
   return (
     <article className="max-w-3xl mx-auto px-6 py-20 space-y-10">
       <header className="space-y-3">
-        <p className="text-xs font-semibold tracking-widest text-zinc-500 uppercase">Institucional</p>
+        <p className="text-xs font-semibold tracking-widest uppercase text-[var(--cor-primaria)]">Institucional</p>
         <h1 className="text-4xl font-semibold tracking-tight">Sobre a {titulo}</h1>
+        <div className="h-1 w-16 rounded-full" style={{ background: "linear-gradient(90deg, var(--cor-primaria), var(--cor-secundaria))" }} />
       </header>
 
       <section className="space-y-4 text-zinc-700 leading-relaxed">
@@ -36,7 +37,7 @@ export default async function SobrePage({ params }: { params: Promise<{ slug: st
       </section>
 
       <section className="space-y-4 border-t border-zinc-200 pt-10">
-        <h2 className="text-xl font-semibold">Dados da empresa</h2>
+        <h2 className="text-xl font-semibold border-l-4 border-[var(--cor-primaria)] pl-3">Dados da empresa</h2>
         <dl className="grid gap-3 text-sm">
           <Linha rotulo="Razão social" valor={site.razaoSocial} />
           {site.nomeFantasia ? <Linha rotulo="Nome fantasia" valor={site.nomeFantasia} /> : null}

@@ -35,11 +35,11 @@ body {
       transform: none;
     }
   }
-  .vt-site > section {
+  .vt-site > section, .vt-site > article {
     animation: vt-fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
   @supports (animation-timeline: view()) {
-    .vt-site > section {
+    .vt-site > section, .vt-site > article {
       animation: vt-fade-up linear both;
       animation-timeline: view();
       animation-range: entry 0% cover 30%;
