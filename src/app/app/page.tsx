@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { formatarCnpj } from "@/lib/cnpj";
 import { urlPublica } from "@/lib/site-loader";
+import { paletaDoSite } from "@/lib/palette";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CnpjForm } from "../_components/cnpj-form";
 
@@ -31,6 +32,8 @@ export default async function AppDashboard() {
       ativo: true,
       dominioProprio: true,
       dominioStatus: true,
+      corPrimaria: true,
+      corSecundaria: true,
     },
   });
 
@@ -53,11 +56,17 @@ export default async function AppDashboard() {
             </div>
           ) : (
             <ul className="space-y-3">
-              {sites.map((s) => (
+              {sites.map((s) => {
+                const pal = paletaDoSite(s);
+                return (
                 <li
                   key={s.id}
-                  className="border border-zinc-200 bg-white rounded-lg p-4 flex items-center justify-between gap-4"
+                  className="relative overflow-hidden border border-zinc-200 bg-white rounded-lg p-4 pl-5 flex items-center justify-between gap-4"
                 >
+                  <span
+                    className="absolute left-0 inset-y-0 w-1.5"
+                    style={{ background: `linear-gradient(180deg, ${pal.primaria}, ${pal.secundaria})` }}
+                  />
                   <div className="min-w-0">
                     <div className="font-medium text-zinc-900 truncate">
                       {s.nomeFantasia || s.razaoSocial}
@@ -91,7 +100,8 @@ export default async function AppDashboard() {
                     </Link>
                   </div>
                 </li>
-              ))}
+                );
+              })}
             </ul>
           )}
         </section>

@@ -41,7 +41,9 @@ export async function adicionarCustomHostname(dominio: string): Promise<CustomHo
     method: "POST",
     body: JSON.stringify({
       hostname: dominio,
-      ssl: { method: "http", type: "dv", settings: { min_tls_version: "1.2" } },
+      // TXT DCV: o cert pode validar via DNS independente do edge estar no caminho.
+      // (Para não-wildcard a CF ainda tenta HTTP automático depois que o domínio aponta.)
+      ssl: { method: "txt", type: "dv", settings: { min_tls_version: "1.2" } },
     }),
   })) as CustomHostname;
 }
