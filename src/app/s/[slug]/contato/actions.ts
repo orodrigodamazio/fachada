@@ -51,6 +51,6 @@ export async function enviarContato(
 
   log.info("lead recebido", { slug, ip: ip === "unknown" ? "unknown" : ip.slice(0, 12) });
 
-  revalidatePath(`/admin/${slug}/leads`);
+  revalidatePath(`/app/${slug}`);
   return { ok: true, mensagem: "Mensagem recebida. Em breve retornaremos." };
 }

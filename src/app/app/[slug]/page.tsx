@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
 import { formatarCnpj } from "@/lib/cnpj";
+import { siteParaUsuario } from "@/lib/auth";
+import { paletaDoSite } from "@/lib/palette";
+import { CoresForm } from "./cores-form";
 import { EditForm } from "./edit-form";
 import { UploadImagem } from "./upload-imagem";
 import { DominioForm } from "./dominio-form";
@@ -11,16 +12,11 @@ import { alternarAtivo, deletarSite } from "./actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminSite({ params }: { params: Promise<{ slug: string }> }) {
+export default async function EditarSite({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const site = await prisma.site.findUnique({
-    where: { slug },
-    include: {
-      leads: { orderBy: { createdAt: "desc" }, take: 10 },
-      _count: { select: { leads: true } },
-    },
-  });
-  if (!site) notFound();
+  const { site, user } = await siteParaUsuario(slug);
+  const ehAdmin = user.role === "ADMIN";
+  const cores = paletaDoSite(site);
 
   const toggle = alternarAtivo.bind(null, slug);
   const remover = deletarSite.bind(null, slug);
@@ -30,7 +26,9 @@ export default async function AdminSite({ params }: { params: Promise<{ slug: st
       <div className="max-w-4xl mx-auto space-y-6">
         <header className="flex items-start justify-between gap-4">
           <div>
-            <Link href="/admin" className="text-xs text-zinc-500 underline">← Admin</Link>
+            <Link href={ehAdmin ? "/admin" : "/app"} className="text-xs text-zinc-500 underline">
+              {ehAdmin ? "← Admin" : "← Meus sites"}
+            </Link>
             <h1 className="text-2xl font-semibold tracking-tight mt-1">
               {site.nomeFantasia || site.razaoSocial}
             </h1>
@@ -59,6 +57,8 @@ export default async function AdminSite({ params }: { params: Promise<{ slug: st
           <UploadImagem slug={site.slug} tipo="logo" rotulo="Logo" urlAtual={site.logoUrl} aspectRatio="square" />
           <UploadImagem slug={site.slug} tipo="hero" rotulo="Imagem do hero" urlAtual={site.heroImageUrl} aspectRatio="wide" />
         </div>
+
+        <CoresForm slug={site.slug} primaria={cores.primaria} secundaria={cores.secundaria} />
 
         <DominioForm
           slug={site.slug}

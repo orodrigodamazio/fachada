@@ -22,7 +22,12 @@ export default async function HomePublica({ params }: { params: Promise<{ slug: 
             <Image src={site.heroImageUrl} alt="" fill className="object-cover" unoptimized priority />
             <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/40" />
           </div>
-        ) : null}
+        ) : (
+          <div
+            className="absolute inset-0 opacity-[0.08]"
+            style={{ background: `radial-gradient(circle at 15% 25%, var(--cor-primaria), transparent 55%)` }}
+          />
+        )}
         <div className="relative max-w-6xl mx-auto px-6 py-24 md:py-32">
           <div className="max-w-2xl space-y-6">
             <h1 className="text-4xl md:text-5xl font-semibold tracking-tight leading-tight text-zinc-900">
@@ -32,7 +37,7 @@ export default async function HomePublica({ params }: { params: Promise<{ slug: 
             <div className="flex flex-wrap gap-3 pt-2">
               <Link
                 href={`${base}/contato`}
-                className="inline-flex items-center h-11 px-6 rounded-md bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-800"
+                className="inline-flex items-center h-11 px-6 rounded-md bg-[var(--cor-primaria)] text-white text-sm font-medium hover:opacity-90"
               >
                 Falar com a gente
               </Link>
@@ -50,7 +55,7 @@ export default async function HomePublica({ params }: { params: Promise<{ slug: 
       <section className="border-b border-zinc-200">
         <div className="max-w-6xl mx-auto px-6 py-20 grid gap-12 md:grid-cols-2 items-start">
           <div className="space-y-4">
-            <p className="text-xs font-semibold tracking-widest text-zinc-500 uppercase">Sobre</p>
+            <p className="text-xs font-semibold tracking-widest uppercase text-[var(--cor-primaria)]">Sobre</p>
             <h2 className="text-3xl font-semibold tracking-tight">Quem somos</h2>
             <p className="text-zinc-600 leading-relaxed">
               {site.sobre ||
@@ -66,7 +71,7 @@ export default async function HomePublica({ params }: { params: Promise<{ slug: 
           </div>
 
           <div className="space-y-4">
-            <p className="text-xs font-semibold tracking-widest text-zinc-500 uppercase">Nossa missão</p>
+            <p className="text-xs font-semibold tracking-widest uppercase text-[var(--cor-primaria)]">Nossa missão</p>
             <h2 className="text-3xl font-semibold tracking-tight">O que nos move</h2>
             <p className="text-zinc-600 leading-relaxed">
               {site.missao ||
@@ -80,7 +85,7 @@ export default async function HomePublica({ params }: { params: Promise<{ slug: 
         <section className="border-b border-zinc-200 bg-zinc-50">
           <div className="max-w-6xl mx-auto px-6 py-20">
             <div className="max-w-3xl space-y-4 mb-10">
-              <p className="text-xs font-semibold tracking-widest text-zinc-500 uppercase">Serviços</p>
+              <p className="text-xs font-semibold tracking-widest uppercase text-[var(--cor-primaria)]">Serviços</p>
               <h2 className="text-3xl font-semibold tracking-tight">O que fazemos</h2>
               <p className="text-zinc-600 leading-relaxed">
                 Nossa atuação principal está em <strong className="text-zinc-900">{site.cnaeDescricao.toLowerCase()}</strong>.
@@ -98,7 +103,7 @@ export default async function HomePublica({ params }: { params: Promise<{ slug: 
       <section>
         <div className="max-w-6xl mx-auto px-6 py-20">
           <div className="max-w-2xl space-y-4">
-            <p className="text-xs font-semibold tracking-widest text-zinc-500 uppercase">Contato</p>
+            <p className="text-xs font-semibold tracking-widest uppercase text-[var(--cor-primaria)]">Contato</p>
             <h2 className="text-3xl font-semibold tracking-tight">Vamos conversar?</h2>
             <p className="text-zinc-600 leading-relaxed">
               Atendemos de segunda a sexta, das 9h às 18h. Retornamos cada mensagem com atenção.
@@ -110,7 +115,7 @@ export default async function HomePublica({ params }: { params: Promise<{ slug: 
             <div className="pt-4">
               <Link
                 href={`${base}/contato`}
-                className="inline-flex items-center h-11 px-6 rounded-md bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-800"
+                className="inline-flex items-center h-11 px-6 rounded-md bg-[var(--cor-primaria)] text-white text-sm font-medium hover:opacity-90"
               >
                 Ir para contato
               </Link>

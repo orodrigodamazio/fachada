@@ -2,6 +2,7 @@ import Script from "next/script";
 import Link from "next/link";
 import Image from "next/image";
 import { carregarSitePorSlug, formatarCnpj, formatarEndereco, tituloEmpresa, type EnderecoJson } from "@/lib/site-loader";
+import { paletaDoSite } from "@/lib/palette";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -48,6 +49,7 @@ export default async function SiteLayout({
   const titulo = tituloEmpresa(site.razaoSocial, site.nomeFantasia);
   const base = `/s/${slug}`;
   const endereco = site.endereco as EnderecoJson;
+  const paleta = paletaDoSite(site);
 
   const temEnderecoCompleto = endereco.logradouro && endereco.municipio && endereco.uf;
   const tipo = temEnderecoCompleto ? "LocalBusiness" : "Organization";
@@ -89,7 +91,14 @@ export default async function SiteLayout({
   Object.keys(jsonLd).forEach((k) => jsonLd[k] === undefined && delete jsonLd[k]);
 
   return (
-    <div className="min-h-dvh flex flex-col bg-white text-zinc-900">
+    <div
+      className="min-h-dvh flex flex-col bg-white text-zinc-900"
+      style={{ ["--cor-primaria"]: paleta.primaria, ["--cor-secundaria"]: paleta.secundaria } as React.CSSProperties}
+    >
+      <div
+        className="h-1 w-full"
+        style={{ background: `linear-gradient(90deg, ${paleta.primaria}, ${paleta.secundaria})` }}
+      />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {site.metaPixel ? (
         <>

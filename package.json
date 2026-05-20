@@ -9,6 +9,7 @@
     "migrate:dev": "bun --env-file=.env prisma migrate dev",
     "migrate:deploy": "bunx prisma migrate deploy",
     "db:studio": "bun --env-file=.env prisma studio",
+    "bootstrap:admin": "bun --env-file=.env scripts/bootstrap-admin.ts",
     "smoke": "playwright test",
     "smoke:install": "playwright install chromium --with-deps"
   },

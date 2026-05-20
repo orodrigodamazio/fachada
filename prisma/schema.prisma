@@ -8,6 +8,31 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  nome         String?
+  role         UserRole  @default(USER)
+
+  sessions     Session[]
+  sites        Site[]
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
 model Lead {
   id          String   @id @default(cuid())
   siteId      String
@@ -25,6 +50,9 @@ model Lead {
 
 model Site {
   id              String   @id @default(cuid())
+
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   cnpj            String   @unique
   razaoSocial     String
@@ -51,6 +79,9 @@ model Site {
 
   logoUrl         String?
   heroImageUrl    String?
+
+  corPrimaria     String?
+  corSecundaria   String?
 
   dominioProprio  String?  @unique
   dominioStatus   DominioStatus @default(NAO_CADASTRADO)
@@ -80,6 +111,12 @@ model Site {
   @@index([slug])
   @@index([dominioProprio])
   @@index([cnpj])
+  @@index([userId])
+}
+
+enum UserRole {
+  USER
+  ADMIN
 }
 
 enum DominioStatus {

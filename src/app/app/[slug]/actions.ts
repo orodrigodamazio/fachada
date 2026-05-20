@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { garantirAcessoAoSite } from "@/lib/auth";
+import { corValida } from "@/lib/palette";
 import { generateText, LLMError } from "@/lib/llm";
 import { uploadImagem, deletarImagem, R2Error } from "@/lib/r2";
 import { tituloEmpresa } from "@/lib/site-loader";
@@ -33,6 +35,7 @@ const SYSTEM = `Você gera texto institucional brasileiro pra sites de empresas.
 6. Retorne APENAS o texto pedido, sem aspas, sem prefixo "Aqui está", sem markdown.`;
 
 export async function gerarTextoIA(slug: string, campo: string): Promise<IaResult> {
+  await garantirAcessoAoSite(slug);
   if (!PROMPTS[campo]) return { ok: false, erro: "Campo não suportado" };
   const site = await prisma.site.findUnique({ where: { slug } });
   if (!site) return { ok: false, erro: "Site não encontrado" };
@@ -68,6 +71,7 @@ const CAMPOS_TRACKING = ["metaPixel", "metaCapiToken", "gaId"] as const;
 type CampoTracking = (typeof CAMPOS_TRACKING)[number];
 
 export async function salvarTextos(slug: string, _prev: EditState, formData: FormData): Promise<EditState> {
+  await garantirAcessoAoSite(slug);
   const site = await prisma.site.findUnique({ where: { slug }, select: { id: true } });
   if (!site) return { erro: "Site não encontrado" };
 
@@ -81,7 +85,7 @@ export async function salvarTextos(slug: string, _prev: EditState, formData: For
   }
 
   await prisma.site.update({ where: { id: site.id }, data });
-  revalidatePath(`/admin/${slug}`);
+  revalidatePath(`/app/${slug}`);
   revalidatePath(`/s/${slug}`);
   return { ok: true };
 }
@@ -93,6 +97,7 @@ export async function salvarTracking(
   _prev: TrackingState,
   formData: FormData,
 ): Promise<TrackingState> {
+  await garantirAcessoAoSite(slug);
   const site = await prisma.site.findUnique({ where: { slug }, select: { id: true } });
   if (!site) return { erro: "Site não encontrado" };
 
@@ -108,23 +113,27 @@ export async function salvarTracking(
   }
 
   await prisma.site.update({ where: { id: site.id }, data });
-  revalidatePath(`/admin/${slug}`);
+  revalidatePath(`/app/${slug}`);
   revalidatePath(`/s/${slug}`);
   return { ok: true };
 }
 
 export async function alternarAtivo(slug: string) {
+  await garantirAcessoAoSite(slug);
   const site = await prisma.site.findUnique({ where: { slug }, select: { id: true, ativo: true } });
   if (!site) return;
   await prisma.site.update({ where: { id: site.id }, data: { ativo: !site.ativo } });
+  revalidatePath(`/app`);
   revalidatePath(`/admin`);
-  revalidatePath(`/admin/${slug}`);
+  revalidatePath(`/app/${slug}`);
 }
 
 export async function deletarSite(slug: string) {
+  await garantirAcessoAoSite(slug);
   await prisma.site.delete({ where: { slug } });
+  revalidatePath(`/app`);
   revalidatePath(`/admin`);
-  redirect("/admin");
+  redirect("/app");
 }
 
 export type UploadState = { ok?: true; url?: string; erro?: string } | undefined;
@@ -135,6 +144,7 @@ export async function uploadImagemAction(
   _prev: UploadState,
   formData: FormData,
 ): Promise<UploadState> {
+  await garantirAcessoAoSite(slug);
   const file = formData.get("arquivo") as File | null;
   if (!file || file.size === 0) return { erro: "Selecione um arquivo" };
 
@@ -161,7 +171,7 @@ export async function uploadImagemAction(
   await prisma.site.update({ where: { id: site.id }, data: { [campo]: url } });
   if (antigo) await deletarImagem(antigo);
 
-  revalidatePath(`/admin/${slug}`);
+  revalidatePath(`/app/${slug}`);
   revalidatePath(`/s/${slug}`);
   return { ok: true, url };
 }
@@ -176,6 +186,7 @@ export async function salvarDominioProprio(
   _prev: DominioState,
   formData: FormData,
 ): Promise<DominioState> {
+  await garantirAcessoAoSite(slug);
   const raw = String(formData.get("dominio") ?? "").trim().toLowerCase();
   const dominio = raw.replace(/^https?:\/\//, "").replace(/\/.*/, "");
 
@@ -190,7 +201,7 @@ export async function salvarDominioProprio(
       where: { slug },
       data: { dominioProprio: null, dominioStatus: "NAO_CADASTRADO", dominioVerifEm: null, cnameAlvo: null },
     });
-    revalidatePath(`/admin/${slug}`);
+    revalidatePath(`/app/${slug}`);
     return { ok: true, status: "removido" };
   }
 
@@ -221,11 +232,12 @@ export async function salvarDominioProprio(
     data: { dominioProprio: dominio, dominioStatus: "PENDENTE_DNS", cnameAlvo: alvo },
   });
   log.info("dominio cadastrado", { slug, dominio, alvo });
-  revalidatePath(`/admin/${slug}`);
+  revalidatePath(`/app/${slug}`);
   return { ok: true, status: "PENDENTE_DNS" };
 }
 
 export async function obterRecordsDominio(slug: string): Promise<{ records: DnsRecord[]; ativo: boolean; sslStatus: string; usaSaas: boolean }> {
+  await garantirAcessoAoSite(slug);
   const site = await prisma.site.findUnique({ where: { slug }, select: { dominioProprio: true, cnameAlvo: true } });
   if (!site?.dominioProprio) return { records: [], ativo: false, sslStatus: "none", usaSaas: false };
 
@@ -247,6 +259,7 @@ export async function obterRecordsDominio(slug: string): Promise<{ records: DnsR
 }
 
 export async function verificarDominioAcao(slug: string): Promise<DominioState> {
+  await garantirAcessoAoSite(slug);
   const site = await prisma.site.findUnique({
     where: { slug },
     select: { id: true, dominioProprio: true, cnameAlvo: true },
@@ -264,14 +277,14 @@ export async function verificarDominioAcao(slug: string): Promise<DominioState> 
         data: { dominioStatus: "VERIFICADO", dominioVerifEm: new Date() },
       });
       log.info("dominio verificado (CF SaaS)", { slug, dominio: site.dominioProprio });
-      revalidatePath(`/admin/${slug}`);
+      revalidatePath(`/app/${slug}`);
       return { ok: true, status: "VERIFICADO" };
     }
     await prisma.site.update({
       where: { id: site.id },
       data: { dominioStatus: "PENDENTE_DNS", dominioVerifEm: new Date() },
     });
-    revalidatePath(`/admin/${slug}`);
+    revalidatePath(`/app/${slug}`);
     return { ok: false, erro: `Cloudflare: SSL ${st?.sslStatus ?? "pendente"}, status ${st?.status ?? "?"}. Configure o CNAME e aguarde.` };
   }
 
@@ -282,7 +295,7 @@ export async function verificarDominioAcao(slug: string): Promise<DominioState> 
       data: { dominioStatus: "VERIFICADO", dominioVerifEm: new Date() },
     });
     log.info("dominio verificado", { slug, dominio: site.dominioProprio, alvo: r.alvo });
-    revalidatePath(`/admin/${slug}`);
+    revalidatePath(`/app/${slug}`);
     return { ok: true, status: "VERIFICADO", alvo: r.alvo };
   }
   await prisma.site.update({
@@ -290,7 +303,7 @@ export async function verificarDominioAcao(slug: string): Promise<DominioState> 
     data: { dominioStatus: "FALHA", dominioVerifEm: new Date() },
   });
   log.warn("dominio falhou", { slug, dominio: site.dominioProprio, razao: r.razao, detalhe: r.detalhe });
-  revalidatePath(`/admin/${slug}`);
+  revalidatePath(`/app/${slug}`);
   return { ok: false, erro: razaoMsg(r.razao, r.detalhe) };
 }
 
@@ -319,6 +332,7 @@ export async function salvarEmailComercial(
   _prev: EmailState,
   formData: FormData,
 ): Promise<EmailState> {
+  await garantirAcessoAoSite(slug);
   const handle = String(formData.get("emailHandle") ?? "").trim().toLowerCase();
   const forwardTo = String(formData.get("emailForwardTo") ?? "").trim().toLowerCase();
 
@@ -327,7 +341,7 @@ export async function salvarEmailComercial(
       where: { slug },
       data: { emailHandle: null, emailForwardTo: null, emailStatus: "NAO_CONFIGURADO", emailVerifEm: null },
     });
-    revalidatePath(`/admin/${slug}`);
+    revalidatePath(`/app/${slug}`);
     return { ok: true, status: "removido" };
   }
   if (!/^[a-z0-9._-]+$/.test(handle)) return { ok: false, erro: "Handle inválido (use letras, números, ., _, -)" };
@@ -344,11 +358,12 @@ export async function salvarEmailComercial(
     },
   });
   log.info("email comercial cadastrado", { slug, handle, forwardTo });
-  revalidatePath(`/admin/${slug}`);
+  revalidatePath(`/app/${slug}`);
   return { ok: true, status: "PENDENTE_MX" };
 }
 
 export async function verificarEmailAcao(slug: string): Promise<EmailState> {
+  await garantirAcessoAoSite(slug);
   const site = await prisma.site.findUnique({
     where: { slug },
     select: { id: true, dominioProprio: true, emailHandle: true },
@@ -363,7 +378,7 @@ export async function verificarEmailAcao(slug: string): Promise<EmailState> {
       data: { emailStatus: "VERIFICADO", emailVerifEm: new Date() },
     });
     log.info("email MX verificado", { slug, dominio: site.dominioProprio });
-    revalidatePath(`/admin/${slug}`);
+    revalidatePath(`/app/${slug}`);
     return { ok: true, status: "VERIFICADO", encontrados: r.encontrados };
   }
   await prisma.site.update({
@@ -371,7 +386,7 @@ export async function verificarEmailAcao(slug: string): Promise<EmailState> {
     data: { emailStatus: "FALHA", emailVerifEm: new Date() },
   });
   log.warn("email MX falhou", { slug, dominio: site.dominioProprio, razao: r.razao });
-  revalidatePath(`/admin/${slug}`);
+  revalidatePath(`/app/${slug}`);
   return {
     ok: false,
     erro:
@@ -383,6 +398,7 @@ export async function verificarEmailAcao(slug: string): Promise<EmailState> {
 }
 
 export async function removerImagem(slug: string, tipo: "logo" | "hero") {
+  await garantirAcessoAoSite(slug);
   const site = await prisma.site.findUnique({
     where: { slug },
     select: { id: true, logoUrl: true, heroImageUrl: true },
@@ -392,6 +408,27 @@ export async function removerImagem(slug: string, tipo: "logo" | "hero") {
   const antigo = tipo === "logo" ? site.logoUrl : site.heroImageUrl;
   await prisma.site.update({ where: { id: site.id }, data: { [campo]: null } });
   if (antigo) await deletarImagem(antigo);
-  revalidatePath(`/admin/${slug}`);
+  revalidatePath(`/app/${slug}`);
+  revalidatePath(`/s/${slug}`);
+}
+
+export type CoresState = { ok?: true; erro?: string } | undefined;
+
+export async function salvarCores(slug: string, _prev: CoresState, formData: FormData): Promise<CoresState> {
+  await garantirAcessoAoSite(slug);
+  const primaria = String(formData.get("corPrimaria") ?? "").trim().toLowerCase();
+  const secundaria = String(formData.get("corSecundaria") ?? "").trim().toLowerCase();
+  if (!corValida(primaria) || !corValida(secundaria)) return { erro: "Cores inválidas (use #rrggbb)." };
+
+  await prisma.site.update({ where: { slug }, data: { corPrimaria: primaria, corSecundaria: secundaria } });
+  revalidatePath(`/app/${slug}`);
+  revalidatePath(`/s/${slug}`);
+  return { ok: true };
+}
+
+export async function resetarCores(slug: string) {
+  await garantirAcessoAoSite(slug);
+  await prisma.site.update({ where: { slug }, data: { corPrimaria: null, corSecundaria: null } });
+  revalidatePath(`/app/${slug}`);
   revalidatePath(`/s/${slug}`);
 }

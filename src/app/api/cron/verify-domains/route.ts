@@ -37,7 +37,7 @@ export async function GET(req: Request) {
         where: { id: site.id },
         data: { dominioStatus: novoStatus, dominioVerifEm: new Date() },
       });
-      revalidatePath(`/admin/${site.slug}`);
+      revalidatePath(`/app/${site.slug}`);
       log.info("dominio status mudou", {
         slug: site.slug,
         dominio: site.dominioProprio,
@@ -73,7 +73,7 @@ export async function GET(req: Request) {
         where: { id: s.id },
         data: { emailStatus: novo, emailVerifEm: new Date() },
       });
-      revalidatePath(`/admin/${s.slug}`);
+      revalidatePath(`/app/${s.slug}`);
       log.info("email MX mudou", { slug: s.slug, de: s.emailStatus, para: novo });
     } else {
       await prisma.site.update({ where: { id: s.id }, data: { emailVerifEm: new Date() } });

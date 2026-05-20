@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/auth";
 import { formatarCnpj } from "@/lib/cnpj";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminHome() {
+  await requireAdmin();
   const sites = await prisma.site.findMany({
     orderBy: { createdAt: "desc" },
     select: {
@@ -17,6 +19,7 @@ export default async function AdminHome() {
       dominioProprio: true,
       dominioStatus: true,
       createdAt: true,
+      user: { select: { email: true } },
       _count: { select: { leads: true } },
     },
   });
@@ -30,7 +33,7 @@ export default async function AdminHome() {
             <p className="text-sm text-zinc-500">{sites.length} site(s) cadastrado(s)</p>
           </div>
           <Link
-            href="/"
+            href="/app"
             className="inline-flex items-center h-9 px-4 rounded-md bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-800"
           >
             Novo site
@@ -40,13 +43,14 @@ export default async function AdminHome() {
         <div className="border border-zinc-200 bg-white rounded-lg overflow-hidden">
           {sites.length === 0 ? (
             <div className="p-12 text-center text-sm text-zinc-500">
-              Nenhum site ainda. <Link className="underline" href="/">Criar o primeiro</Link>.
+              Nenhum site ainda. <Link className="underline" href="/app">Criar o primeiro</Link>.
             </div>
           ) : (
             <table className="w-full text-sm">
               <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600">
                 <tr>
                   <th className="text-left px-4 py-2 font-medium">Empresa</th>
+                  <th className="text-left px-4 py-2 font-medium">Dono</th>
                   <th className="text-left px-4 py-2 font-medium">CNPJ</th>
                   <th className="text-left px-4 py-2 font-medium">Domínio</th>
                   <th className="text-left px-4 py-2 font-medium">Leads</th>
@@ -60,6 +64,7 @@ export default async function AdminHome() {
                       <div className="font-medium">{s.nomeFantasia || s.razaoSocial}</div>
                       <div className="text-xs text-zinc-500">{s.slug}</div>
                     </td>
+                    <td className="px-4 py-3 text-zinc-700">{s.user?.email ?? <span className="text-zinc-400">sem dono</span>}</td>
                     <td className="px-4 py-3 text-zinc-700">{formatarCnpj(s.cnpj)}</td>
                     <td className="px-4 py-3 text-zinc-700">
                       {s.dominioProprio ? (
@@ -75,7 +80,7 @@ export default async function AdminHome() {
                     </td>
                     <td className="px-4 py-3">{s._count.leads}</td>
                     <td className="px-4 py-3 flex gap-3">
-                      <Link className="text-zinc-700 underline" href={`/admin/${s.slug}`}>Editar</Link>
+                      <Link className="text-zinc-700 underline" href={`/app/${s.slug}`}>Editar</Link>
                       <Link className="text-zinc-700 underline" href={`/preview/${s.slug}`}>Preview</Link>
                     </td>
                   </tr>

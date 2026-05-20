@@ -2,20 +2,27 @@
 
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { requireUser } from "@/lib/auth";
 import { consultarCnpj, limparCnpj, validarCnpj, gerarSlug, CnpjError } from "@/lib/cnpj";
+import { gerarPaletaSeed } from "@/lib/palette";
 import { log } from "@/lib/logger";
 import { prewarmSite } from "@/lib/prewarm";
 
 export type CriarSiteState = { erro?: string; campo?: string } | undefined;
 
 export async function criarSite(_prev: CriarSiteState, formData: FormData): Promise<CriarSiteState> {
+  const user = await requireUser();
+
   const cnpjRaw = String(formData.get("cnpj") ?? "");
   const cnpj = limparCnpj(cnpjRaw);
 
   if (!validarCnpj(cnpj)) return { erro: "CNPJ inválido", campo: "cnpj" };
 
-  const existente = await prisma.site.findUnique({ where: { cnpj }, select: { slug: true } });
-  if (existente) redirect(`/preview/${existente.slug}`);
+  const existente = await prisma.site.findUnique({ where: { cnpj }, select: { slug: true, userId: true } });
+  if (existente) {
+    if (existente.userId === user.id) redirect(`/app/${existente.slug}`);
+    return { erro: "Esse CNPJ já possui um site na plataforma.", campo: "cnpj" };
+  }
 
   let receita;
   try {
@@ -33,13 +40,17 @@ export async function criarSite(_prev: CriarSiteState, formData: FormData): Prom
   }
 
   const slug = gerarSlug(receita.razao_social, cnpj);
+  const paleta = gerarPaletaSeed(`${receita.razao_social}|${cnpj}`);
 
   log.info("site criado", { cnpj, slug, razao: receita.razao_social });
 
   await prisma.site.create({
     data: {
+      userId: user.id,
       cnpj,
       slug,
+      corPrimaria: paleta.primaria,
+      corSecundaria: paleta.secundaria,
       razaoSocial: receita.razao_social,
       nomeFantasia: receita.nome_fantasia,
       endereco: {
@@ -64,5 +75,5 @@ export async function criarSite(_prev: CriarSiteState, formData: FormData): Prom
 
   await prewarmSite(slug).catch(() => false);
 
-  redirect(`/preview/${slug}`);
+  redirect(`/app/${slug}`);
 }

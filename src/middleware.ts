@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+const SESSION_COOKIE = "fachada_session";
+
 const ROOT_DOMAINS = (process.env.NEXT_PUBLIC_ROOT_DOMAINS ?? process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "fachada.local")
   .split(",")
   .map((d) => d.trim().toLowerCase())
@@ -14,9 +16,6 @@ const APP_HOSTS = new Set(
 
 const RESERVED = new Set(["www", "admin", "api", ""]);
 
-const ADMIN_USER = process.env.ADMIN_USER ?? "";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "";
-
 function matchSub(host: string): string | null {
   for (const root of ROOT_DOMAINS) {
     if (host === root || host === `www.${root}`) return null;
@@ -29,66 +28,13 @@ function matchSub(host: string): string | null {
   return null;
 }
 
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let r = 0;
-  for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return r === 0;
-}
-
-const MAX_FALHAS = 10;
-const JANELA_MS = 15 * 60_000;
-const tentativas = new Map<string, { count: number; resetAt: number }>();
-
-function registrarFalha(ip: string): number {
-  const now = Date.now();
-  const b = tentativas.get(ip);
-  if (!b || now > b.resetAt) {
-    tentativas.set(ip, { count: 1, resetAt: now + JANELA_MS });
-    return 1;
-  }
-  b.count++;
-  return b.count;
-}
-
-function bloqueado(ip: string): { bloqueado: boolean; retryAfter: number } {
-  const b = tentativas.get(ip);
-  if (!b || Date.now() > b.resetAt) return { bloqueado: false, retryAfter: 0 };
-  if (b.count >= MAX_FALHAS) return { bloqueado: true, retryAfter: Math.ceil((b.resetAt - Date.now()) / 1000) };
-  return { bloqueado: false, retryAfter: 0 };
-}
-
-function limparSucesso(ip: string) {
-  tentativas.delete(ip);
-}
-
-function challenge() {
-  return new NextResponse("Auth required", {
-    status: 401,
-    headers: { "WWW-Authenticate": 'Basic realm="Fachada Admin", charset="UTF-8"' },
-  });
-}
-
-function tooManyRequests(retryAfter: number) {
-  return new NextResponse("Muitas tentativas. Tente mais tarde.", {
-    status: 429,
-    headers: { "Retry-After": String(retryAfter) },
-  });
-}
-
-function checkAdminAuth(authHeader: string | null): boolean {
-  if (!ADMIN_USER || !ADMIN_PASSWORD) return false;
-  if (!authHeader || !authHeader.startsWith("Basic ")) return false;
-  try {
-    const decoded = atob(authHeader.slice(6));
-    const sep = decoded.indexOf(":");
-    if (sep < 0) return false;
-    const u = decoded.slice(0, sep);
-    const p = decoded.slice(sep + 1);
-    return timingSafeEqual(u, ADMIN_USER) && timingSafeEqual(p, ADMIN_PASSWORD);
-  } catch {
-    return false;
-  }
+function needsAuth(pathname: string): boolean {
+  return (
+    pathname === "/app" ||
+    pathname.startsWith("/app/") ||
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/")
+  );
 }
 
 export function middleware(req: NextRequest) {
@@ -96,26 +42,25 @@ export function middleware(req: NextRequest) {
   if (!host) return NextResponse.next();
 
   const pathname = req.nextUrl.pathname;
-  const isAdminHost = host.startsWith("admin.");
-  const isAdminPath = pathname === "/admin" || pathname.startsWith("/admin/");
 
-  if (isAdminHost || isAdminPath) {
-    const ip =
-      req.headers.get("cf-connecting-ip") ||
-      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-      "unknown";
-    const bloq = bloqueado(ip);
-    if (bloq.bloqueado) return tooManyRequests(bloq.retryAfter);
-
-    if (!checkAdminAuth(req.headers.get("authorization"))) {
-      registrarFalha(ip);
-      return challenge();
+  // Gate otimista de autenticação (presença do cookie). A verificação real
+  // — sessão válida no banco e role — acontece no DAL (requireUser/requireAdmin).
+  if (needsAuth(pathname)) {
+    if (!req.cookies.get(SESSION_COOKIE)?.value) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/login";
+      url.search = "";
+      return NextResponse.redirect(url);
     }
-    limparSucesso(ip);
+    return NextResponse.next();
   }
 
   if (APP_HOSTS.has(host)) return NextResponse.next();
   if (host === "localhost" || /^\d+\.\d+\.\d+\.\d+$/.test(host)) return NextResponse.next();
+
+  const isAdminHost = ROOT_DOMAINS.some((r) => host === `admin.${r}`);
+  const isKnownRoot = ROOT_DOMAINS.some((r) => host === r || host === `www.${r}`);
+  if (isAdminHost || isKnownRoot) return NextResponse.next();
 
   const url = req.nextUrl.clone();
   const PASS_THROUGH = ["/sitemap.xml", "/robots.txt", "/status"];
@@ -123,22 +68,19 @@ export function middleware(req: NextRequest) {
     url.pathname.startsWith("/s/") ||
     url.pathname.startsWith("/_next") ||
     url.pathname.startsWith("/api") ||
-    url.pathname.startsWith("/status") ||
     PASS_THROUGH.includes(url.pathname)
   ) {
     return NextResponse.next();
   }
 
-  const sub = matchSub(host);
-  const isKnownRoot = ROOT_DOMAINS.some((r) => host === r || host === `www.${r}`);
-
   // subdomínio do nosso domínio → /s/<sub>
+  const sub = matchSub(host);
   if (sub) {
     url.pathname = `/s/${sub}${url.pathname === "/" ? "" : url.pathname}`;
     return NextResponse.rewrite(url);
   }
   // domínio próprio do cliente (Cloudflare for SaaS) → /s/<host>, loader resolve por dominioProprio
-  if (!isKnownRoot && host.includes(".")) {
+  if (host.includes(".")) {
     url.pathname = `/s/${encodeURIComponent(host)}${url.pathname === "/" ? "" : url.pathname}`;
     return NextResponse.rewrite(url);
   }

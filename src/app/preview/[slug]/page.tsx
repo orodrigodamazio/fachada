@@ -109,7 +109,7 @@ export default async function PreviewPage({ params }: { params: Promise<{ slug: 
               <a href={urlPublica} target="_blank" rel="noopener noreferrer">Ver site</a>
             </Button>
             <Button asChild variant="outline">
-              <Link href={`/admin/${site.slug}`}>Editar no painel</Link>
+              <Link href={`/app/${site.slug}`}>Editar no painel</Link>
             </Button>
           </div>
         </div>
