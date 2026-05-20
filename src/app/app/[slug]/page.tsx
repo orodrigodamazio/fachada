@@ -6,6 +6,7 @@ import { siteParaUsuario } from "@/lib/auth";
 import { paletaDoSite } from "@/lib/palette";
 import { CoresForm } from "./cores-form";
 import { ContatoForm } from "./contato-form";
+import { PreviewFrame } from "./preview-frame";
 import { EditForm } from "./edit-form";
 import { UploadImagem } from "./upload-imagem";
 import { DominioForm } from "./dominio-form";
@@ -69,6 +70,27 @@ export default async function EditarSite({ params }: { params: Promise<{ slug: s
             </a>
           </div>
         </header>
+
+        {!site.ativo ? (
+          <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="font-medium text-amber-900">Rascunho — ainda não publicado</p>
+              <p className="text-sm text-amber-800">
+                Revise as informações abaixo e publique quando estiver pronto. Enquanto rascunho, o site não fica público.
+              </p>
+            </div>
+            <form action={toggle}>
+              <button
+                type="submit"
+                className="inline-flex items-center h-10 px-5 rounded-md bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700"
+              >
+                Publicar site
+              </button>
+            </form>
+          </div>
+        ) : null}
+
+        <PreviewFrame slug={site.slug} />
 
         <div className="grid gap-6 md:grid-cols-2">
           <UploadImagem slug={site.slug} tipo="logo" rotulo="Logo" urlAtual={site.logoUrl} aspectRatio="square" />

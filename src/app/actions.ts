@@ -47,6 +47,7 @@ export async function criarSite(_prev: CriarSiteState, formData: FormData): Prom
   await prisma.site.create({
     data: {
       userId: user.id,
+      ativo: false, // nasce como rascunho; publica no editor após revisar
       cnpj,
       slug,
       corPrimaria: paleta.primaria,

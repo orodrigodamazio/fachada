@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 export type EnderecoJson = {
   logradouro: string | null;
@@ -19,7 +20,12 @@ export const carregarSitePorSlug = cache(async (slugOrDomain: string) => {
   const site = id.includes(".")
     ? await prisma.site.findFirst({ where: { dominioProprio: id, dominioStatus: "VERIFICADO" } })
     : await prisma.site.findUnique({ where: { slug: id } });
-  if (!site || !site.ativo) notFound();
+  if (!site) notFound();
+  // Rascunho (não publicado): só o dono/admin enxerga (preview); público vê 404.
+  if (!site.ativo) {
+    const user = await getCurrentUser();
+    if (!user || (user.role !== "ADMIN" && site.userId !== user.id)) notFound();
+  }
   return site;
 });
 
