@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { prisma } from "@/lib/prisma";
 import { formatarCnpj } from "@/lib/cnpj";
 import { urlPublica } from "@/lib/site-loader";
 import { siteParaUsuario } from "@/lib/auth";
@@ -19,6 +20,7 @@ export default async function EditarSite({ params }: { params: Promise<{ slug: s
   const { site, user } = await siteParaUsuario(slug);
   const ehAdmin = user.role === "ADMIN";
   const cores = paletaDoSite(site);
+  const novosEmails = await prisma.emailMessage.count({ where: { siteId: site.id, lido: false } });
 
   const toggle = alternarAtivo.bind(null, slug);
   const remover = deletarSite.bind(null, slug);
@@ -46,6 +48,17 @@ export default async function EditarSite({ params }: { params: Promise<{ slug: s
             >
               {site.ativo ? "Ativo" : "Inativo"}
             </span>
+            <Link
+              href={`/app/${site.slug}/emails`}
+              className="relative inline-flex items-center h-9 px-3 rounded-md border border-zinc-300 text-xs font-medium hover:bg-zinc-100"
+            >
+              Caixa de entrada
+              {novosEmails > 0 ? (
+                <span className="ml-1.5 inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-emerald-600 text-white text-[10px] font-bold">
+                  {novosEmails}
+                </span>
+              ) : null}
+            </Link>
             <a
               href={urlPublica(site)}
               target="_blank"

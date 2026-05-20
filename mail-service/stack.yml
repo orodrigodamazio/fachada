@@ -1,0 +1,31 @@
+version: "3.8"
+
+# Stack ISOLADA do recebedor de email (não toca o core fachada).
+services:
+  smtp:
+    image: ghcr.io/orodrigodamazio/vertente-mail:latest
+    ports:
+      - target: 25
+        published: 25
+        protocol: tcp
+        mode: host
+    environment:
+      MAIL_ROOT_DOMAIN: ${MAIL_ROOT_DOMAIN:-vertentebr.com.br}
+      MAIL_WEBHOOK_URL: ${MAIL_WEBHOOK_URL}
+      MAIL_INBOUND_SECRET: ${MAIL_INBOUND_SECRET}
+    networks:
+      - gmnet
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 32M
+
+networks:
+  gmnet:
+    external: true

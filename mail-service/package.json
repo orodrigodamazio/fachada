@@ -1,0 +1,13 @@
+{
+  "name": "vertente-mail",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "start": "bun server.js"
+  },
+  "dependencies": {
+    "mailparser": "^3.7.1",
+    "smtp-server": "^3.13.4"
+  }
+}
