@@ -8,7 +8,7 @@ import { uploadImagem, deletarImagem, R2Error } from "@/lib/r2";
 import { tituloEmpresa } from "@/lib/site-loader";
 import { log } from "@/lib/logger";
 import { verificarCname, verificarMX, validarDominio, alvoCNAME, MX_CLOUDFLARE, SPF_CLOUDFLARE } from "@/lib/dns-verify";
-import { adicionarCustomHostname, removerCustomHostname, statusCustomHostname, saasConfigurado, fallbackTarget } from "@/lib/cloudflare-saas";
+import { adicionarCustomHostname, removerCustomHostname, statusCustomHostname, recordsNecessarios, saasConfigurado, fallbackTarget, type DnsRecord } from "@/lib/cloudflare-saas";
 
 export type EditState = { ok?: boolean; erro?: string } | undefined;
 export type IaResult = { ok: true; texto: string } | { ok: false; erro: string };
@@ -223,6 +223,27 @@ export async function salvarDominioProprio(
   log.info("dominio cadastrado", { slug, dominio, alvo });
   revalidatePath(`/admin/${slug}`);
   return { ok: true, status: "PENDENTE_DNS" };
+}
+
+export async function obterRecordsDominio(slug: string): Promise<{ records: DnsRecord[]; ativo: boolean; sslStatus: string; usaSaas: boolean }> {
+  const site = await prisma.site.findUnique({ where: { slug }, select: { dominioProprio: true, cnameAlvo: true } });
+  if (!site?.dominioProprio) return { records: [], ativo: false, sslStatus: "none", usaSaas: false };
+
+  if (saasConfigurado()) {
+    try {
+      const r = await recordsNecessarios(site.dominioProprio);
+      return { ...r, usaSaas: true };
+    } catch {
+      return { records: [], ativo: false, sslStatus: "erro", usaSaas: true };
+    }
+  }
+  // sem SaaS: CNAME tradicional
+  return {
+    records: [{ tipo: "CNAME", nome: site.dominioProprio, valor: site.cnameAlvo ?? "vertentebr.com.br", descricao: "Aponta seu domínio para o servidor" }],
+    ativo: false,
+    sslStatus: "manual",
+    usaSaas: false,
+  };
 }
 
 export async function verificarDominioAcao(slug: string): Promise<DominioState> {

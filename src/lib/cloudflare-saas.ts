@@ -63,6 +63,54 @@ export async function statusCustomHostname(dominio: string): Promise<{ ativo: bo
   return { ativo: ch.status === "active" && ch.ssl.status === "active", sslStatus: ch.ssl.status, status: ch.status };
 }
 
+export type DnsRecord = { tipo: "CNAME" | "TXT"; nome: string; valor: string; descricao: string };
+
+// Records que o cliente precisa criar no DNS dele. Busca do CF (fonte da verdade).
+export async function recordsNecessarios(dominio: string): Promise<{ records: DnsRecord[]; ativo: boolean; sslStatus: string }> {
+  const raw = (await cf(`/zones/${ZONE}/custom_hostnames?hostname=${encodeURIComponent(dominio)}`)) as Record<string, unknown>[];
+  if (!raw.length) return { records: [], ativo: false, sslStatus: "none" };
+  const ch = raw[0] as {
+    status: string;
+    ssl: { status: string; validation_records?: { txt_name?: string; txt_value?: string }[] };
+    ownership_verification?: { name?: string; value?: string };
+  };
+
+  const records: DnsRecord[] = [];
+  const ativo = ch.status === "active" && ch.ssl.status === "active";
+
+  // 1. CNAME sempre (aponta o domínio pro nosso fallback)
+  records.push({
+    tipo: "CNAME",
+    nome: dominio,
+    valor: fallbackTarget(),
+    descricao: "Aponta seu domínio para o servidor",
+  });
+
+  // 2. TXT ownership (se o CF ainda pede)
+  if (!ativo && ch.ownership_verification?.name && ch.ownership_verification?.value) {
+    records.push({
+      tipo: "TXT",
+      nome: ch.ownership_verification.name,
+      valor: ch.ownership_verification.value,
+      descricao: "Comprova que o domínio é seu",
+    });
+  }
+
+  // 3. TXT de validação SSL (se o CF ainda pede)
+  for (const vr of ch.ssl.validation_records ?? []) {
+    if (!ativo && vr.txt_name && vr.txt_value) {
+      records.push({
+        tipo: "TXT",
+        nome: vr.txt_name,
+        valor: vr.txt_value,
+        descricao: "Libera a emissão do certificado SSL",
+      });
+    }
+  }
+
+  return { records, ativo, sslStatus: ch.ssl.status };
+}
+
 export function fallbackTarget(): string {
   return process.env.CF_SAAS_FALLBACK ?? "";
 }
