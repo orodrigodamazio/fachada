@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Fachada — o site institucional da sua empresa, pronto em minutos",
+  title: "Vertente — o site institucional da sua empresa, pronto em minutos",
   description:
     "Crie o site institucional da sua empresa a partir do CNPJ. Hero, sobre, serviços, contato, privacidade e termos. SEO, domínio próprio e e-mail profissional inclusos.",
 };
@@ -20,7 +20,7 @@ export default async function Home() {
     <div className="min-h-dvh bg-zinc-50 flex flex-col">
       <header className="border-b border-zinc-200 bg-white">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          <span className="text-sm font-semibold tracking-tight text-zinc-900">Fachada</span>
+          <span className="text-sm font-semibold tracking-tight text-zinc-900">Vertente</span>
           <nav className="flex items-center gap-4 text-sm">
             {user ? (
               <Link href="/app" className="text-zinc-900 font-medium hover:underline">
@@ -85,7 +85,7 @@ export default async function Home() {
 
       <footer className="border-t border-zinc-200 bg-white">
         <div className="max-w-5xl mx-auto px-4 py-6 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-500">
-          <span>Fachada © {new Date().getFullYear()}</span>
+          <span>Vertente © {new Date().getFullYear()}</span>
           <nav className="flex gap-4">
             <a href="/status" className="hover:text-zinc-900">Status</a>
           </nav>

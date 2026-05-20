@@ -5,7 +5,7 @@ import { AuthForm } from "../_components/auth-form";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Entrar | Fachada" };
+export const metadata = { title: "Entrar | Vertente" };
 
 export default async function LoginPage() {
   if (await getCurrentUser()) redirect("/app");

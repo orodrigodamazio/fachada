@@ -1,8 +1,12 @@
 import Script from "next/script";
 import Link from "next/link";
 import Image from "next/image";
-import { carregarSitePorSlug, formatarCnpj, formatarEndereco, tituloEmpresa, type EnderecoJson } from "@/lib/site-loader";
+import { carregarSitePorSlug, formatarCnpj, formatarTelefone, formatarEndereco, tituloEmpresa, type EnderecoJson } from "@/lib/site-loader";
 import { paletaDoSite } from "@/lib/palette";
+
+const soDigitos = (v: string | null) => (v ? v.replace(/\D/g, "") : "");
+const linkRede = (v: string | null | undefined, prefixo: string) =>
+  !v ? null : /^https?:\/\//.test(v) ? v : `${prefixo}${v.replace(/^@/, "")}`;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -148,26 +152,62 @@ export default async function SiteLayout({
         </div>
       </header>
 
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 vt-site">{children}</main>
 
-      <footer className="border-t border-zinc-200 bg-zinc-50 mt-16">
-        <div className="max-w-6xl mx-auto px-6 py-10 grid gap-8 md:grid-cols-3 text-sm">
+      <footer className="bg-zinc-50 mt-16">
+        <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${paleta.primaria}, ${paleta.secundaria})` }} />
+        <div className="max-w-6xl mx-auto px-6 py-12 grid gap-8 md:grid-cols-4 text-sm">
           <div>
-            <p className="font-semibold mb-2">{titulo}</p>
+            <p className="font-semibold mb-2 text-[var(--cor-primaria)]">{titulo}</p>
             <p className="text-zinc-600">{site.razaoSocial}</p>
             <p className="text-zinc-600">CNPJ {formatarCnpj(site.cnpj)}</p>
+            {site.dataAbertura ? (
+              <p className="text-zinc-500 mt-2">Empresa ativa desde {site.dataAbertura.getFullYear()}</p>
+            ) : null}
           </div>
+
+          <div>
+            <p className="font-semibold mb-2">Contato</p>
+            <ul className="space-y-1 text-zinc-600">
+              {site.telefone ? <li>Telefone: {formatarTelefone(site.telefone)}</li> : null}
+              {site.whatsapp ? (
+                <li>
+                  <a href={`https://wa.me/55${soDigitos(site.whatsapp)}`} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--cor-primaria)]">
+                    WhatsApp: {formatarTelefone(site.whatsapp)}
+                  </a>
+                </li>
+              ) : null}
+              {site.emailContato ? <li>E-mail: {site.emailContato}</li> : null}
+              {site.horarioAtend ? <li className="text-zinc-500">{site.horarioAtend}</li> : null}
+            </ul>
+            {(site.instagram || site.facebook || site.linkedin) ? (
+              <div className="flex gap-3 mt-3">
+                {linkRede(site.instagram, "https://instagram.com/") ? (
+                  <a href={linkRede(site.instagram, "https://instagram.com/")!} target="_blank" rel="noopener noreferrer" className="text-zinc-600 hover:text-[var(--cor-primaria)] font-medium">Instagram</a>
+                ) : null}
+                {linkRede(site.facebook, "https://facebook.com/") ? (
+                  <a href={linkRede(site.facebook, "https://facebook.com/")!} target="_blank" rel="noopener noreferrer" className="text-zinc-600 hover:text-[var(--cor-primaria)] font-medium">Facebook</a>
+                ) : null}
+                {linkRede(site.linkedin, "https://linkedin.com/") ? (
+                  <a href={linkRede(site.linkedin, "https://linkedin.com/")!} target="_blank" rel="noopener noreferrer" className="text-zinc-600 hover:text-[var(--cor-primaria)] font-medium">LinkedIn</a>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+
           <div>
             <p className="font-semibold mb-2">Endereço</p>
             <p className="text-zinc-600 leading-relaxed">{formatarEndereco(endereco)}</p>
           </div>
+
           <div>
             <p className="font-semibold mb-2">Institucional</p>
             <ul className="space-y-1 text-zinc-600">
-              <li><Link href={`${base}/sobre`} className="hover:text-zinc-900">Sobre</Link></li>
-              <li><Link href={`${base}/contato`} className="hover:text-zinc-900">Contato</Link></li>
-              <li><Link href={`${base}/privacidade`} className="hover:text-zinc-900">Política de Privacidade</Link></li>
-              <li><Link href={`${base}/termos`} className="hover:text-zinc-900">Termos de Uso</Link></li>
+              <li><Link href={`${base}/sobre`} className="hover:text-[var(--cor-primaria)]">Sobre</Link></li>
+              <li><Link href={`${base}/servicos`} className="hover:text-[var(--cor-primaria)]">Serviços</Link></li>
+              <li><Link href={`${base}/contato`} className="hover:text-[var(--cor-primaria)]">Contato</Link></li>
+              <li><Link href={`${base}/privacidade`} className="hover:text-[var(--cor-primaria)]">Política de Privacidade</Link></li>
+              <li><Link href={`${base}/termos`} className="hover:text-[var(--cor-primaria)]">Termos de Uso</Link></li>
             </ul>
           </div>
         </div>

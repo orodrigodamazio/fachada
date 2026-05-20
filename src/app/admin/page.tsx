@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { formatarCnpj } from "@/lib/cnpj";
+import { urlPublica } from "@/lib/site-loader";
 
 export const dynamic = "force-dynamic";
 
@@ -81,7 +82,7 @@ export default async function AdminHome() {
                     <td className="px-4 py-3">{s._count.leads}</td>
                     <td className="px-4 py-3 flex gap-3">
                       <Link className="text-zinc-700 underline" href={`/app/${s.slug}`}>Editar</Link>
-                      <Link className="text-zinc-700 underline" href={`/preview/${s.slug}`}>Preview</Link>
+                      <a className="text-zinc-700 underline" href={urlPublica(s)} target="_blank" rel="noopener noreferrer">Ver</a>
                     </td>
                   </tr>
                 ))}

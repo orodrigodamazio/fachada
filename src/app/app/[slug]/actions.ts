@@ -432,3 +432,23 @@ export async function resetarCores(slug: string) {
   revalidatePath(`/app/${slug}`);
   revalidatePath(`/s/${slug}`);
 }
+
+export type ContatoState = { ok?: true; erro?: string } | undefined;
+const CAMPOS_CONTATO = ["whatsapp", "instagram", "facebook", "linkedin", "horarioAtend"] as const;
+type CampoContato = (typeof CAMPOS_CONTATO)[number];
+
+export async function salvarContatoRedes(slug: string, _prev: ContatoState, formData: FormData): Promise<ContatoState> {
+  await garantirAcessoAoSite(slug);
+  const data: Partial<Record<CampoContato, string | null>> = {};
+  for (const c of CAMPOS_CONTATO) {
+    const v = formData.get(c);
+    if (v !== null) {
+      const s = String(v).trim();
+      data[c] = s ? s.slice(0, 300) : null;
+    }
+  }
+  await prisma.site.update({ where: { slug }, data });
+  revalidatePath(`/app/${slug}`);
+  revalidatePath(`/s/${slug}`);
+  return { ok: true };
+}

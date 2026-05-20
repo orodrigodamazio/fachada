@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fachada",
-  description: "Gerador de site institucional a partir do CNPJ.",
+  title: "Vertente",
+  description: "Crie o site institucional da sua empresa a partir do CNPJ.",
 };
 
 export default function RootLayout({

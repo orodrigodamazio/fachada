@@ -2,12 +2,13 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { formatarCnpj } from "@/lib/cnpj";
+import { urlPublica } from "@/lib/site-loader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CnpjForm } from "../_components/cnpj-form";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Meus sites | Fachada" };
+export const metadata = { title: "Meus sites | Vertente" };
 
 const STATUS_DOMINIO: Record<string, string> = {
   NAO_CADASTRADO: "subdomínio padrão",
@@ -74,12 +75,14 @@ export default async function AppDashboard() {
                     >
                       {s.ativo ? "no ar" : "inativo"}
                     </span>
-                    <Link
-                      href={`/s/${s.slug}`}
+                    <a
+                      href={urlPublica(s)}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="text-sm text-zinc-600 underline underline-offset-2 hover:text-zinc-900"
                     >
                       Ver
-                    </Link>
+                    </a>
                     <Link
                       href={`/app/${s.slug}`}
                       className="inline-flex items-center h-8 px-3 rounded-md bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-800"

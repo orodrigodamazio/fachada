@@ -83,6 +83,12 @@ model Site {
   corPrimaria     String?
   corSecundaria   String?
 
+  whatsapp        String?
+  instagram       String?
+  facebook        String?
+  linkedin        String?
+  horarioAtend    String?
+
   dominioProprio  String?  @unique
   dominioStatus   DominioStatus @default(NAO_CADASTRADO)
   dominioVerifEm  DateTime?

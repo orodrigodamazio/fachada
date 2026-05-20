@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { formatarCnpj } from "@/lib/cnpj";
+import { urlPublica } from "@/lib/site-loader";
 import { siteParaUsuario } from "@/lib/auth";
 import { paletaDoSite } from "@/lib/palette";
 import { CoresForm } from "./cores-form";
+import { ContatoForm } from "./contato-form";
 import { EditForm } from "./edit-form";
 import { UploadImagem } from "./upload-imagem";
 import { DominioForm } from "./dominio-form";
@@ -44,12 +46,14 @@ export default async function EditarSite({ params }: { params: Promise<{ slug: s
             >
               {site.ativo ? "Ativo" : "Inativo"}
             </span>
-            <Link
-              href={`/s/${site.slug}`}
+            <a
+              href={urlPublica(site)}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center h-9 px-3 rounded-md border border-zinc-300 text-xs font-medium hover:bg-zinc-100"
             >
               Ver site
-            </Link>
+            </a>
           </div>
         </header>
 
@@ -59,6 +63,17 @@ export default async function EditarSite({ params }: { params: Promise<{ slug: s
         </div>
 
         <CoresForm slug={site.slug} primaria={cores.primaria} secundaria={cores.secundaria} />
+
+        <ContatoForm
+          slug={site.slug}
+          defaults={{
+            whatsapp: site.whatsapp,
+            instagram: site.instagram,
+            facebook: site.facebook,
+            linkedin: site.linkedin,
+            horarioAtend: site.horarioAtend,
+          }}
+        />
 
         <DominioForm
           slug={site.slug}

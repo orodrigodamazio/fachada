@@ -6,7 +6,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <header className="border-b border-zinc-200 bg-white">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center">
           <Link href="/" className="text-sm font-semibold tracking-tight text-zinc-900">
-            Fachada
+            Vertente
           </Link>
         </div>
       </header>

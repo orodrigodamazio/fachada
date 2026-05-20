@@ -12,7 +12,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <header className="border-b border-zinc-200 bg-white">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
           <Link href="/app" className="text-sm font-semibold tracking-tight text-zinc-900">
-            Fachada
+            Vertente
           </Link>
           <div className="flex items-center gap-4 text-sm">
             {user?.role === "ADMIN" ? (

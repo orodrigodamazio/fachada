@@ -50,3 +50,15 @@ export function formatarEndereco(e: EnderecoJson) {
 export function tituloEmpresa(razaoSocial: string, nomeFantasia: string | null) {
   return nomeFantasia?.trim() || razaoSocial;
 }
+
+export function urlPublica(site: {
+  slug: string;
+  dominioProprio?: string | null;
+  dominioStatus?: string | null;
+}): string {
+  const root = (process.env.NEXT_PUBLIC_ROOT_DOMAINS ?? process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "vertentebr.com.br")
+    .split(",")[0]
+    .trim();
+  if (site.dominioProprio && site.dominioStatus === "VERIFICADO") return `https://${site.dominioProprio}`;
+  return `https://${site.slug}.${root}`;
+}
