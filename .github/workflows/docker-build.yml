@@ -48,3 +48,42 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' }}
+    steps:
+      - name: Verifica se secrets de deploy existem
+        id: gate
+        env:
+          TS_ID: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          if [ -n "$TS_ID" ] && [ -n "$SSH_KEY" ]; then
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Secrets de deploy ausentes — build publicado no GHCR, deploy automático pulado."
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Connect to Tailscale
+        if: steps.gate.outputs.go == 'true'
+        uses: tailscale/github-action@v3
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
+      - name: Deploy via SSH
+        if: steps.gate.outputs.go == 'true'
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_HOST: ${{ secrets.VPS_SSH_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=accept-new root@"$VPS_HOST" \
+            "docker service update --image ghcr.io/orodrigodamazio/fachada:latest --with-registry-auth --force fachada_app"
