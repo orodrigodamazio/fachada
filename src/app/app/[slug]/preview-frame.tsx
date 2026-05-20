@@ -33,7 +33,7 @@ export function PreviewFrame({ slug }: { slug: string }) {
           src={`/s/${slug}`}
           title="Pré-visualização do site"
           className="bg-white border border-zinc-200 rounded shadow-sm shrink-0"
-          style={{ width: mobile ? 390 : "100%", height: 620, maxWidth: "100%" }}
+          style={{ width: mobile ? 360 : "100%", height: 520, maxWidth: "100%" }}
         />
       </div>
       <p className="text-xs text-zinc-500">Prévia ao vivo. Salve as alterações nos blocos abaixo e clique em Atualizar pra ver.</p>

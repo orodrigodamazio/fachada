@@ -1,6 +1,6 @@
 import Script from "next/script";
 import Link from "next/link";
-import Image from "next/image";
+import { LogoMarca } from "@/components/logo-marca";
 import { carregarSitePorSlug, formatarCnpj, formatarTelefone, formatarEndereco, tituloEmpresa, type EnderecoJson } from "@/lib/site-loader";
 import { paletaDoSite } from "@/lib/palette";
 
@@ -139,9 +139,7 @@ export default async function SiteLayout({
       <header className="border-b border-zinc-200">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-6">
           <Link href={base} className="flex items-center gap-3 font-semibold tracking-tight text-lg">
-            {site.logoUrl ? (
-              <Image src={site.logoUrl} alt={titulo} width={36} height={36} className="object-contain" unoptimized />
-            ) : null}
+            <LogoMarca logoUrl={site.logoUrl} nome={titulo} size={40} />
             <span>{titulo}</span>
           </Link>
           <nav className="flex items-center gap-6 text-sm text-zinc-600">

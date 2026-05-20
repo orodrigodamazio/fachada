@@ -55,10 +55,16 @@ export default async function HomePublica({ params }: { params: Promise<{ slug: 
             <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/40" />
           </div>
         ) : (
-          <div
-            className="absolute inset-0 opacity-[0.08]"
-            style={{ background: `radial-gradient(circle at 15% 25%, var(--cor-primaria), transparent 55%)` }}
-          />
+          <div className="absolute inset-0">
+            <div
+              className="absolute inset-0 opacity-[0.10]"
+              style={{ background: `radial-gradient(circle at 15% 20%, var(--cor-primaria), transparent 55%)` }}
+            />
+            <div
+              className="absolute inset-0 opacity-[0.06]"
+              style={{ background: `linear-gradient(120deg, var(--cor-primaria), var(--cor-secundaria))` }}
+            />
+          </div>
         )}
         <div className="relative max-w-6xl mx-auto px-6 py-24 md:py-32">
           <div className="max-w-2xl space-y-6">

@@ -28,7 +28,7 @@ export default async function EditarSite({ params }: { params: Promise<{ slug: s
 
   return (
     <div className="min-h-dvh bg-zinc-50 px-4 py-10">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         <header className="flex items-start justify-between gap-4">
           <div>
             <Link href={ehAdmin ? "/admin" : "/app"} className="text-xs text-zinc-500 underline">
@@ -90,9 +90,9 @@ export default async function EditarSite({ params }: { params: Promise<{ slug: s
           </div>
         ) : null}
 
-        <PreviewFrame slug={site.slug} />
-
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid lg:grid-cols-5 gap-6 items-start">
+          <div className="lg:col-span-3 space-y-6 min-w-0">
+        <div className="grid gap-6 sm:grid-cols-2">
           <UploadImagem slug={site.slug} tipo="logo" rotulo="Logo" urlAtual={site.logoUrl} aspectRatio="square" />
           <UploadImagem slug={site.slug} tipo="hero" rotulo="Imagem do hero" urlAtual={site.heroImageUrl} aspectRatio="wide" />
         </div>
@@ -198,6 +198,14 @@ export default async function EditarSite({ params }: { params: Promise<{ slug: s
             </form>
           </div>
         </section>
+          </div>
+
+          <div className="lg:col-span-2">
+            <div className="lg:sticky lg:top-6">
+              <PreviewFrame slug={site.slug} />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

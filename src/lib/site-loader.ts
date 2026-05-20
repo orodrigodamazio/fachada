@@ -57,6 +57,17 @@ export function tituloEmpresa(razaoSocial: string, nomeFantasia: string | null) 
   return nomeFantasia?.trim() || razaoSocial;
 }
 
+const STOPWORDS = new Set(["de", "do", "da", "dos", "das", "e", "ltda", "sa", "me", "epp", "eireli", "cia", "comercio", "comercial"]);
+
+export function iniciais(nome: string): string {
+  const palavras = nome
+    .replace(/[^\p{L}\s]/gu, " ")
+    .split(/\s+/)
+    .filter((w) => w && !STOPWORDS.has(w.toLowerCase()));
+  const letras = palavras.slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
+  return letras || nome.replace(/[^\p{L}]/gu, "").slice(0, 2).toUpperCase() || "?";
+}
+
 export function urlPublica(site: {
   slug: string;
   dominioProprio?: string | null;
