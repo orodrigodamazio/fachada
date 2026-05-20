@@ -12,7 +12,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     site.metaDescription ||
     `${tituloEmpresa(site.razaoSocial, site.nomeFantasia)}${site.cnaeDescricao ? `. ${site.cnaeDescricao}` : ". Site institucional"}.`;
 
+  const rootDomain = (process.env.NEXT_PUBLIC_ROOT_DOMAINS ?? process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "vertentebr.com.br")
+    .split(",")[0]
+    .trim();
+  const baseUrl =
+    site.dominioProprio && site.dominioStatus === "VERIFICADO"
+      ? `https://${site.dominioProprio}`
+      : `https://${site.slug}.${rootDomain}`;
+
   return {
+    metadataBase: new URL(baseUrl),
     title: { default: titulo, template: `%s | ${titulo}` },
     description: descricao,
     applicationName: titulo,
