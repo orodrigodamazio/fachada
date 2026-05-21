@@ -17,7 +17,8 @@ export default async function HomePublica({ params }: { params: Promise<{ slug: 
   const site = await carregarSitePorSlug(slug);
   const titulo = tituloEmpresa(site.razaoSocial, site.nomeFantasia);
   const base = `/s/${slug}`;
-  const tel = formatarTelefone(site.telefone);
+  const telBruto = site.whatsapp || site.telefone || "";
+  const tel = telBruto ? formatarTelefone(telBruto) : null;
   const receita = (site.receitaRaw ?? {}) as ReceitaExtra;
 
   const ano = site.dataAbertura ? site.dataAbertura.getFullYear() : null;
@@ -202,9 +203,15 @@ export default async function HomePublica({ params }: { params: Promise<{ slug: 
               {site.horarioAtend || "Atendemos de segunda a sexta, das 9h às 18h."} Retornamos cada mensagem com atenção.
             </p>
             <div className="pt-2 space-y-1 text-white/90 text-sm">
-              {tel ? <p>Telefone: {tel}</p> : null}
-              {site.whatsapp ? <p>WhatsApp: {formatarTelefone(site.whatsapp)}</p> : null}
-              {site.emailContato ? <p>E-mail: {site.emailContato}</p> : null}
+              {tel ? <p>Telefone / WhatsApp: {tel}</p> : null}
+              {site.emailContato ? (
+                <p>
+                  E-mail:{" "}
+                  <a href={`mailto:${site.emailContato}`} className="underline decoration-white/40 hover:decoration-white">
+                    {site.emailContato}
+                  </a>
+                </p>
+              ) : null}
             </div>
             <div className="pt-4 flex flex-wrap gap-3">
               <Link
@@ -213,9 +220,9 @@ export default async function HomePublica({ params }: { params: Promise<{ slug: 
               >
                 Ir para contato
               </Link>
-              {site.whatsapp ? (
+              {telBruto ? (
                 <a
-                  href={`https://wa.me/55${soDigitos(site.whatsapp)}`}
+                  href={`https://wa.me/55${soDigitos(telBruto)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center h-11 px-6 rounded-md border border-white/40 text-white text-sm font-medium hover:bg-white/10"

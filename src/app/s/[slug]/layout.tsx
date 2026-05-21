@@ -167,15 +167,19 @@ export default async function SiteLayout({
           <div>
             <p className="font-semibold mb-2">Contato</p>
             <ul className="space-y-1 text-zinc-600">
-              {site.telefone ? <li>Telefone: {formatarTelefone(site.telefone)}</li> : null}
-              {site.whatsapp ? (
+              {site.whatsapp || site.telefone ? (
                 <li>
-                  <a href={`https://wa.me/55${soDigitos(site.whatsapp)}`} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--cor-primaria)]">
-                    WhatsApp: {formatarTelefone(site.whatsapp)}
+                  <a href={`https://wa.me/55${soDigitos(site.whatsapp || site.telefone)}`} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--cor-primaria)]">
+                    Telefone / WhatsApp: {formatarTelefone(site.whatsapp || site.telefone)}
                   </a>
                 </li>
               ) : null}
-              {site.emailContato ? <li>E-mail: {site.emailContato}</li> : null}
+              {site.emailContato ? (
+                <li>
+                  E-mail:{" "}
+                  <a href={`mailto:${site.emailContato}`} className="hover:text-[var(--cor-primaria)]">{site.emailContato}</a>
+                </li>
+              ) : null}
               {site.horarioAtend ? <li className="text-zinc-500">{site.horarioAtend}</li> : null}
             </ul>
             {(site.instagram || site.facebook || site.linkedin) ? (

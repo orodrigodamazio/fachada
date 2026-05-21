@@ -21,6 +21,7 @@ function Botao() {
 
 type Defaults = {
   whatsapp: string | null;
+  email: string | null;
   instagram: string | null;
   facebook: string | null;
   linkedin: string | null;
@@ -39,8 +40,14 @@ export function ContatoForm({ slug, defaults }: { slug: string; defaults: Defaul
 
       <form action={action} className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="whatsapp">WhatsApp</Label>
+          <Label htmlFor="whatsapp">Telefone / WhatsApp</Label>
           <Input id="whatsapp" name="whatsapp" defaultValue={defaults.whatsapp ?? ""} placeholder="(11) 99999-9999" />
+          <p className="text-xs text-zinc-400">É o mesmo número no site e no botão de WhatsApp.</p>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="email">E-mail de contato</Label>
+          <Input id="email" name="email" type="email" defaultValue={defaults.email ?? ""} placeholder="contato@suaempresa.com.br" />
+          <p className="text-xs text-zinc-400">Aparece no site para os clientes.</p>
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="instagram">Instagram</Label>

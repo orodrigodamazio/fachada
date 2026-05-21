@@ -105,6 +105,7 @@ export default async function EditarSite({ params }: { params: Promise<{ slug: s
           slug={site.slug}
           defaults={{
             whatsapp: site.whatsapp,
+            email: site.emailContato,
             instagram: site.instagram,
             facebook: site.facebook,
             linkedin: site.linkedin,
