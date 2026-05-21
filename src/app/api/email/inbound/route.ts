@@ -46,9 +46,10 @@ export async function POST(req: NextRequest) {
   const slug = slugDoDestinatario(body.to);
   if (!slug) return NextResponse.json({ ok: false, erro: "destinatário fora do domínio" }, { status: 422 });
 
-  const site = await prisma.site.findUnique({ where: { slug }, select: { id: true, ativo: true } });
-  if (!site || !site.ativo) {
-    // Não é erro do remetente; aceitamos e descartamos (evita retries infinitos).
+  // Recebe pra qualquer site existente, mesmo rascunho/inativo (códigos de verificação
+  // precisam chegar antes de publicar). Só descarta se o site não existir.
+  const site = await prisma.site.findUnique({ where: { slug }, select: { id: true } });
+  if (!site) {
     log.warn("email inbound sem site", { slug });
     return NextResponse.json({ ok: true, descartado: true });
   }
