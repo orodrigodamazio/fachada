@@ -28,8 +28,8 @@ export default async function EditarSite({ params }: { params: Promise<{ slug: s
   const remover = deletarSite.bind(null, slug);
 
   return (
-    <div className="min-h-dvh bg-zinc-50 px-3 py-6">
-      <div className="max-w-[1600px] mx-auto space-y-6">
+    <div className="min-h-dvh bg-zinc-50 px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto space-y-6">
         <header className="flex items-start justify-between gap-4">
           <div>
             <Link href={ehAdmin ? "/admin" : "/app"} className="text-xs text-zinc-500 underline">
@@ -113,6 +113,11 @@ export default async function EditarSite({ params }: { params: Promise<{ slug: s
           }}
         />
 
+        <details className="rounded-lg">
+          <summary className="cursor-pointer select-none text-sm font-semibold uppercase tracking-wider text-zinc-500 px-1 py-2 hover:text-zinc-700">
+            Configurações avançadas · domínio, e-mail e rastreamento
+          </summary>
+          <div className="space-y-6 mt-3">
         <DominioForm
           slug={site.slug}
           dominioAtual={site.dominioProprio}
@@ -137,6 +142,8 @@ export default async function EditarSite({ params }: { params: Promise<{ slug: s
           metaCapiToken={site.metaCapiToken}
           gaId={site.gaId}
         />
+          </div>
+        </details>
 
         <EditForm
           slug={site.slug}
