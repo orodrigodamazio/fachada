@@ -11,7 +11,6 @@ import { SplitEditor } from "./split-editor";
 import { EditForm } from "./edit-form";
 import { UploadImagem } from "./upload-imagem";
 import { DominioForm } from "./dominio-form";
-import { EmailForm } from "./email-form";
 import { TrackingForm } from "./tracking-form";
 import { alternarAtivo, deletarSite } from "./actions";
 
@@ -113,27 +112,30 @@ export default async function EditarSite({ params }: { params: Promise<{ slug: s
           }}
         />
 
+        <section className="border border-zinc-200 bg-white rounded-lg p-5 space-y-1.5">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Email profissional</h2>
+          <p className="text-sm text-zinc-700">
+            Já está ativo, de graça: <code className="bg-zinc-100 px-1.5 py-0.5 rounded">contato@{site.slug}.vertentebr.com.br</code>. Use em cadastros e para receber códigos de verificação.
+          </p>
+          <Link href={`/app/${site.slug}/emails`} className="inline-block text-sm font-medium underline underline-offset-2 text-zinc-900">
+            Abrir caixa de entrada
+          </Link>
+        </section>
+
         <details className="rounded-lg">
           <summary className="cursor-pointer select-none text-sm font-semibold uppercase tracking-wider text-zinc-500 px-1 py-2 hover:text-zinc-700">
-            Configurações avançadas · domínio, e-mail e rastreamento
+            Configurações avançadas · domínio próprio e rastreamento
           </summary>
           <div className="space-y-6 mt-3">
+            <p className="text-sm text-zinc-500">
+              Opcional. Seu site já funciona no subdomínio grátis. Configure um domínio próprio só se você já tem um domínio comprado.
+            </p>
         <DominioForm
           slug={site.slug}
           dominioAtual={site.dominioProprio}
           status={site.dominioStatus}
           alvoCname={site.cnameAlvo}
           verificadoEm={site.dominioVerifEm}
-        />
-
-        <EmailForm
-          slug={site.slug}
-          dominioVerificado={site.dominioStatus === "VERIFICADO"}
-          dominio={site.dominioProprio}
-          emailHandle={site.emailHandle}
-          emailForwardTo={site.emailForwardTo}
-          status={site.emailStatus}
-          verificadoEm={site.emailVerifEm}
         />
 
         <TrackingForm
