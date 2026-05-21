@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Image from "next/image";
 import { uploadImagemAction, removerImagem, type UploadState } from "./actions";
@@ -34,6 +34,7 @@ export function UploadImagem({
   const acao = uploadImagemAction.bind(null, slug, tipo);
   const [state, action] = useActionState<UploadState, FormData>(acao, undefined);
   const remover = removerImagem.bind(null, slug, tipo);
+  const [nomeArquivo, setNomeArquivo] = useState("");
 
   const url = state?.url ?? urlAtual;
 
@@ -62,16 +63,37 @@ export function UploadImagem({
       ) : null}
 
       <form action={action} className="space-y-3">
-        <input
-          type="file"
-          name="arquivo"
-          accept="image/jpeg,image/png,image/webp,image/svg+xml"
-          required
-          className="block w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-zinc-100 file:text-zinc-900 file:cursor-pointer hover:file:bg-zinc-200"
-        />
-        <p className="text-xs text-zinc-500">JPEG, PNG, WebP ou SVG. Máximo 4 MB.</p>
-        <Botao label={url ? "Substituir" : "Enviar imagem"} />
-        {state?.erro ? <p className="text-sm text-red-600">{state.erro}</p> : null}
+        <label className="flex flex-col items-center justify-center gap-1.5 w-full rounded-lg border-2 border-dashed border-zinc-300 bg-zinc-50 px-4 py-6 cursor-pointer text-center hover:border-zinc-400 hover:bg-zinc-100 transition-colors">
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-zinc-400"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          <span className="text-sm font-medium text-zinc-700">{nomeArquivo || "Clique para escolher uma imagem"}</span>
+          <span className="text-xs text-zinc-500">JPEG, PNG, WebP ou SVG · máx 4 MB</span>
+          <input
+            type="file"
+            name="arquivo"
+            accept="image/jpeg,image/png,image/webp,image/svg+xml"
+            required
+            onChange={(e) => setNomeArquivo(e.target.files?.[0]?.name ?? "")}
+            className="hidden"
+          />
+        </label>
+        <div className="flex items-center gap-3">
+          <Botao label={url ? "Substituir" : "Enviar imagem"} />
+          {state?.erro ? <p className="text-sm text-red-600">{state.erro}</p> : null}
+        </div>
       </form>
     </section>
   );
