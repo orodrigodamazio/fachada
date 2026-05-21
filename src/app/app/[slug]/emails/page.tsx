@@ -2,6 +2,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { siteParaUsuario } from "@/lib/auth";
 import { AutoRefresh } from "../auto-refresh";
+import { CopyEmail } from "../copy-email";
+import { InboxClient, type EmailItem } from "../inbox-client";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Caixa de entrada | Vertente" };
@@ -26,19 +28,31 @@ export default async function InboxPage({ params }: { params: Promise<{ slug: st
 
   const endereco = `contato@${site.slug}.${ROOT}`;
 
+  const itens: EmailItem[] = emails.map((e) => ({
+    id: e.id,
+    fromAddr: e.fromAddr,
+    toAddr: e.toAddr,
+    subject: e.subject,
+    texto: e.texto ?? "",
+    codigo: e.codigo,
+    lido: e.lido,
+    data: e.createdAt.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }),
+    dataLonga: e.createdAt.toLocaleString("pt-BR"),
+  }));
+
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10 space-y-6">
-      <header className="space-y-2">
-        <Link href={`/app/${slug}`} className="text-xs text-zinc-500 underline">← Editar site</Link>
-        <h1 className="text-2xl font-semibold tracking-tight">Caixa de entrada</h1>
-        <p className="text-sm text-zinc-500">
-          Recebe em <code className="bg-zinc-100 px-1.5 py-0.5 rounded">{endereco}</code> (e qualquer endereço{" "}
-          <code className="bg-zinc-100 px-1.5 py-0.5 rounded">@{site.slug}.{ROOT}</code>). Bom pra códigos de verificação.
-        </p>
-        <p className="text-xs text-emerald-700 flex items-center gap-1.5">
-          <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          Atualiza sozinha. Os emails novos aparecem aqui em segundos, sem recarregar.
-        </p>
+    <div className="max-w-5xl mx-auto px-4 py-8 space-y-4">
+      <Link href={`/app/${slug}`} className="text-xs text-zinc-500 underline">← Editar site</Link>
+
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <h1 className="text-2xl font-semibold tracking-tight">Caixa de entrada</h1>
+          <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700" title="Atualiza sozinha">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            ao vivo
+          </span>
+        </div>
+        <CopyEmail endereco={endereco} />
       </header>
 
       <AutoRefresh />
@@ -48,44 +62,7 @@ export default async function InboxPage({ params }: { params: Promise<{ slug: st
           Nenhum email recebido ainda. Use <strong>{endereco}</strong> em cadastros e verificações.
         </div>
       ) : (
-        <div className="border border-zinc-200 rounded-xl overflow-hidden bg-white divide-y divide-zinc-100">
-          {emails.map((e) => {
-            const inicial = (e.fromAddr.trim()[0] || "?").toUpperCase();
-            return (
-              <div
-                key={e.id}
-                className={`flex items-start gap-3 px-4 py-3 hover:bg-zinc-50 transition-colors ${e.lido ? "" : "bg-emerald-50/50"}`}
-              >
-                <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-200 text-zinc-700 text-sm font-semibold">
-                  {inicial}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <span className={`truncate text-sm ${e.lido ? "text-zinc-700" : "font-semibold text-zinc-900"}`}>
-                      {e.fromAddr}
-                    </span>
-                    <span className="text-xs text-zinc-400 shrink-0">
-                      {e.createdAt.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                    </span>
-                  </div>
-                  <div className={`truncate text-sm ${e.lido ? "text-zinc-600" : "font-medium text-zinc-900"}`}>
-                    {e.subject || "(sem assunto)"}
-                  </div>
-                  {e.codigo ? (
-                    <div className="mt-1.5 flex items-center gap-2">
-                      <span className="text-[11px] text-zinc-500 uppercase tracking-wide">Código</span>
-                      <span className="font-mono text-base font-bold tracking-widest bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded">
-                        {e.codigo}
-                      </span>
-                    </div>
-                  ) : null}
-                  {e.texto ? <p className="mt-1 text-sm text-zinc-500 line-clamp-2">{e.texto}</p> : null}
-                </div>
-                {!e.lido ? <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-emerald-500" /> : null}
-              </div>
-            );
-          })}
-        </div>
+        <InboxClient emails={itens} />
       )}
     </div>
   );
