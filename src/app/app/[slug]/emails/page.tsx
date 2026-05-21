@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { siteParaUsuario } from "@/lib/auth";
+import { paletaDoSite } from "@/lib/palette";
 import { AutoRefresh } from "../auto-refresh";
 import { CopyEmail } from "../copy-email";
 import { InboxClient, type EmailItem } from "../inbox-client";
@@ -27,6 +28,7 @@ export default async function InboxPage({ params }: { params: Promise<{ slug: st
   }
 
   const endereco = `contato@${site.slug}.${ROOT}`;
+  const cores = paletaDoSite(site);
 
   const itens: EmailItem[] = emails.map((e) => ({
     id: e.id,
@@ -47,12 +49,12 @@ export default async function InboxPage({ params }: { params: Promise<{ slug: st
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <h1 className="text-2xl font-semibold tracking-tight">Caixa de entrada</h1>
-          <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700" title="Atualiza sozinha">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="inline-flex items-center gap-1 text-[11px]" style={{ color: cores.primaria }} title="Atualiza sozinha">
+            <span className="inline-block h-1.5 w-1.5 rounded-full animate-pulse" style={{ backgroundColor: cores.primaria }} />
             ao vivo
           </span>
         </div>
-        <CopyEmail endereco={endereco} />
+        <CopyEmail endereco={endereco} cor={cores.primaria} />
       </header>
 
       <AutoRefresh />
@@ -62,7 +64,7 @@ export default async function InboxPage({ params }: { params: Promise<{ slug: st
           Nenhum email recebido ainda. Use <strong>{endereco}</strong> em cadastros e verificações.
         </div>
       ) : (
-        <InboxClient emails={itens} />
+        <InboxClient emails={itens} primaria={cores.primaria} secundaria={cores.secundaria} />
       )}
     </div>
   );

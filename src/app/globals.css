@@ -80,3 +80,18 @@ body {
     }
   }
 }
+
+/* Motion da caixa de entrada (painel de leitura + destaque do código). */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes inbox-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes inbox-pop {
+    0% { opacity: 0; transform: scale(0.92); }
+    60% { transform: scale(1.03); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  .animate-inbox-in { animation: inbox-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .animate-inbox-pop { animation: inbox-pop 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+}

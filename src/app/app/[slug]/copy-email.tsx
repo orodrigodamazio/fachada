@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export function CopyEmail({ endereco }: { endereco: string }) {
+export function CopyEmail({ endereco, cor }: { endereco: string; cor?: string }) {
   const [copiado, setCopiado] = useState(false);
 
   async function copiar() {
@@ -21,7 +21,8 @@ export function CopyEmail({ endereco }: { endereco: string }) {
       <button
         type="button"
         onClick={copiar}
-        className="shrink-0 inline-flex items-center gap-1 rounded-md bg-zinc-900 px-2.5 py-1 text-xs font-medium text-white hover:bg-zinc-800 transition-colors"
+        style={cor ? { backgroundColor: cor } : undefined}
+        className={`shrink-0 inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium text-white transition-opacity hover:opacity-90 ${cor ? "" : "bg-zinc-900 hover:bg-zinc-800"}`}
       >
         {copiado ? "Copiado!" : "Copiar"}
       </button>
