@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { siteParaUsuario } from "@/lib/auth";
+import { AutoRefresh } from "../auto-refresh";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Caixa de entrada | Vertente" };
@@ -34,7 +35,13 @@ export default async function InboxPage({ params }: { params: Promise<{ slug: st
           Recebe em <code className="bg-zinc-100 px-1.5 py-0.5 rounded">{endereco}</code> (e qualquer endereço{" "}
           <code className="bg-zinc-100 px-1.5 py-0.5 rounded">@{site.slug}.{ROOT}</code>). Bom pra códigos de verificação.
         </p>
+        <p className="text-xs text-emerald-700 flex items-center gap-1.5">
+          <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          Atualiza sozinha. Os emails novos aparecem aqui em segundos, sem recarregar.
+        </p>
       </header>
+
+      <AutoRefresh />
 
       {emails.length === 0 ? (
         <div className="border border-dashed border-zinc-300 bg-white rounded-lg p-10 text-center text-sm text-zinc-500">
