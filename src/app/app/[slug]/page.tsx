@@ -7,6 +7,7 @@ import { paletaDoSite } from "@/lib/palette";
 import { CoresForm } from "./cores-form";
 import { ContatoForm } from "./contato-form";
 import { PreviewFrame } from "./preview-frame";
+import { SplitEditor } from "./split-editor";
 import { EditForm } from "./edit-form";
 import { UploadImagem } from "./upload-imagem";
 import { DominioForm } from "./dominio-form";
@@ -27,8 +28,8 @@ export default async function EditarSite({ params }: { params: Promise<{ slug: s
   const remover = deletarSite.bind(null, slug);
 
   return (
-    <div className="min-h-dvh bg-zinc-50 px-4 py-10">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-dvh bg-zinc-50 px-3 py-6">
+      <div className="max-w-[1600px] mx-auto space-y-6">
         <header className="flex items-start justify-between gap-4">
           <div>
             <Link href={ehAdmin ? "/admin" : "/app"} className="text-xs text-zinc-500 underline">
@@ -90,8 +91,10 @@ export default async function EditarSite({ params }: { params: Promise<{ slug: s
           </div>
         ) : null}
 
-        <div className="grid lg:grid-cols-5 gap-6 items-start">
-          <div className="lg:col-span-3 space-y-6 min-w-0">
+        <SplitEditor
+          right={<PreviewFrame slug={site.slug} />}
+          left={
+            <>
         <div className="grid gap-6 sm:grid-cols-2">
           <UploadImagem slug={site.slug} tipo="logo" rotulo="Logo" urlAtual={site.logoUrl} aspectRatio="square" />
           <UploadImagem slug={site.slug} tipo="hero" rotulo="Imagem do hero" urlAtual={site.heroImageUrl} aspectRatio="wide" />
@@ -198,14 +201,9 @@ export default async function EditarSite({ params }: { params: Promise<{ slug: s
             </form>
           </div>
         </section>
-          </div>
-
-          <div className="lg:col-span-2">
-            <div className="lg:sticky lg:top-6">
-              <PreviewFrame slug={site.slug} />
-            </div>
-          </div>
-        </div>
+            </>
+          }
+        />
       </div>
     </div>
   );
