@@ -48,32 +48,44 @@ export default async function InboxPage({ params }: { params: Promise<{ slug: st
           Nenhum email recebido ainda. Use <strong>{endereco}</strong> em cadastros e verificações.
         </div>
       ) : (
-        <ul className="space-y-3">
-          {emails.map((e) => (
-            <li key={e.id} className={`border rounded-lg p-4 ${e.lido ? "border-zinc-200 bg-white" : "border-zinc-300 bg-zinc-50"}`}>
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="text-sm font-medium text-zinc-900 truncate">{e.subject || "(sem assunto)"}</div>
-                  <div className="text-xs text-zinc-500 truncate">de {e.fromAddr} · para {e.toAddr}</div>
+        <div className="border border-zinc-200 rounded-xl overflow-hidden bg-white divide-y divide-zinc-100">
+          {emails.map((e) => {
+            const inicial = (e.fromAddr.trim()[0] || "?").toUpperCase();
+            return (
+              <div
+                key={e.id}
+                className={`flex items-start gap-3 px-4 py-3 hover:bg-zinc-50 transition-colors ${e.lido ? "" : "bg-emerald-50/50"}`}
+              >
+                <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-200 text-zinc-700 text-sm font-semibold">
+                  {inicial}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className={`truncate text-sm ${e.lido ? "text-zinc-700" : "font-semibold text-zinc-900"}`}>
+                      {e.fromAddr}
+                    </span>
+                    <span className="text-xs text-zinc-400 shrink-0">
+                      {e.createdAt.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                  <div className={`truncate text-sm ${e.lido ? "text-zinc-600" : "font-medium text-zinc-900"}`}>
+                    {e.subject || "(sem assunto)"}
+                  </div>
+                  {e.codigo ? (
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <span className="text-[11px] text-zinc-500 uppercase tracking-wide">Código</span>
+                      <span className="font-mono text-base font-bold tracking-widest bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded">
+                        {e.codigo}
+                      </span>
+                    </div>
+                  ) : null}
+                  {e.texto ? <p className="mt-1 text-sm text-zinc-500 line-clamp-2">{e.texto}</p> : null}
                 </div>
-                <span className="text-xs text-zinc-400 shrink-0">{e.createdAt.toLocaleString("pt-BR")}</span>
+                {!e.lido ? <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-emerald-500" /> : null}
               </div>
-
-              {e.codigo ? (
-                <div className="mt-3 flex items-center gap-2">
-                  <span className="text-xs text-zinc-500 uppercase tracking-wide">Código</span>
-                  <span className="font-mono text-lg font-bold tracking-widest bg-emerald-100 text-emerald-800 px-3 py-1 rounded">
-                    {e.codigo}
-                  </span>
-                </div>
-              ) : null}
-
-              {e.texto ? (
-                <p className="mt-3 text-sm text-zinc-600 whitespace-pre-wrap line-clamp-6">{e.texto}</p>
-              ) : null}
-            </li>
-          ))}
-        </ul>
+            );
+          })}
+        </div>
       )}
     </div>
   );
