@@ -14,11 +14,32 @@ if (!WEBHOOK || !SECRET) {
   process.exit(1);
 }
 
-// Só aceitamos destinatários de subdomínios do nosso root: local@<sub>.<root>
+// Subdomínios (qualquer handle) caem na caixa do site. O apex <root> só aceita
+// handles conhecidos (anti-spam) e o conteúdo vai pro log (uso pontual do dono:
+// pegar códigos de verificação que serviços mandam pro domínio raiz).
+const APEX_HANDLES = new Set([
+  "contato", "postmaster", "admin", "administrador", "verificacao", "verification",
+  "suporte", "atendimento", "security", "seguranca", "webmaster", "hostmaster",
+  "no-reply", "noreply", "comercial", "financeiro", "mail", "email", "hello", "oi",
+]);
 function aceita(addr) {
-  const host = String(addr || "").toLowerCase().split("@")[1];
-  if (!host) return false;
-  return host.endsWith(`.${ROOT}`) && host !== ROOT;
+  const a = String(addr || "").toLowerCase();
+  const at = a.indexOf("@");
+  if (at < 0) return false;
+  const local = a.slice(0, at);
+  const host = a.slice(at + 1);
+  if (host.endsWith(`.${ROOT}`) && host !== ROOT) return true; // subdomínio: qualquer handle
+  if (host === ROOT) return APEX_HANDLES.has(local); // apex: só handles conhecidos
+  return false;
+}
+
+function ehApex(addr) {
+  return String(addr || "").toLowerCase().split("@")[1] === ROOT;
+}
+
+function extrairCodigo(subject, text) {
+  const m = `${subject || ""} ${text || ""}`.match(/\b(\d{4,8})\b/);
+  return m ? m[1] : null;
 }
 
 async function entregar(payload) {
@@ -64,6 +85,13 @@ const server = new SMTPServer({
         const from =
           parsed.from?.value?.[0]?.address || session.envelope.mailFrom?.address || "desconhecido";
         for (const to of recipients) {
+          if (ehApex(to)) {
+            // apex: não tem site associado; loga pro dono ler o código.
+            const codigo = extrairCodigo(parsed.subject, parsed.text);
+            console.log(`[APEX] to=${to} from=${from} codigo=${codigo || "-"} subject=${String(parsed.subject || "").slice(0, 80)}`);
+            if (parsed.text) console.log(`[APEX] texto: ${String(parsed.text).replace(/\s+/g, " ").slice(0, 240)}`);
+            continue;
+          }
           await entregar({
             to,
             from,
