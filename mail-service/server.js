@@ -36,6 +36,9 @@ async function entregar(payload) {
 }
 
 const server = new SMTPServer({
+  // STARTTLS desabilitado: a impl. de TLS trava sob bun (handshake timeout).
+  // Sem STARTTLS, remetentes entregam em texto puro (Gmail/Outlook fazem isso).
+  hideSTARTTLS: true,
   authOptional: true,
   disabledCommands: ["AUTH"],
   size: MAX_SIZE,
