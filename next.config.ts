@@ -30,7 +30,7 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: process.cwd(),
-  serverExternalPackages: ["@prisma/client", "@prisma/adapter-pg"],
+  serverExternalPackages: ["@prisma/client", "@prisma/adapter-pg", "unpdf"],
   poweredByHeader: false,
   experimental: {
     serverActions: {

@@ -3,7 +3,8 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { consultarCnpj, limparCnpj, validarCnpj, gerarSlug, CnpjError } from "@/lib/cnpj";
+import { consultarCnpj, limparCnpj, validarCnpj, gerarSlug, CnpjError, type ReceitaResponse } from "@/lib/cnpj";
+import { parseCartaoCnpj, CartaoCnpjError } from "@/lib/cartao-cnpj";
 import { gerarPaletaSeed } from "@/lib/palette";
 import { log } from "@/lib/logger";
 import { prewarmSite } from "@/lib/prewarm";
@@ -39,6 +40,41 @@ export async function criarSite(_prev: CriarSiteState, formData: FormData): Prom
     return { erro: msg };
   }
 
+  return criarSiteComReceita(user.id, receita);
+}
+
+export async function criarSitePorCartao(_prev: CriarSiteState, formData: FormData): Promise<CriarSiteState> {
+  const user = await requireUser();
+
+  const file = formData.get("cartao");
+  if (!file || typeof file === "string" || file.size === 0) {
+    return { erro: "Anexe o PDF do cartão CNPJ.", campo: "cartao" };
+  }
+  if (file.size > 5_000_000) return { erro: "PDF muito grande (máximo 5 MB).", campo: "cartao" };
+
+  let receita: ReceitaResponse;
+  try {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    receita = await parseCartaoCnpj(bytes);
+  } catch (e) {
+    const msg = e instanceof CartaoCnpjError ? e.message : "Não consegui ler o cartão CNPJ. Tente baixar de novo na Receita.";
+    log.warn("parseCartaoCnpj falhou", { msg });
+    return { erro: msg, campo: "cartao" };
+  }
+
+  return criarSiteComReceita(user.id, receita);
+}
+
+async function criarSiteComReceita(userId: string, receita: ReceitaResponse): Promise<CriarSiteState> {
+  const cnpj = limparCnpj(receita.cnpj);
+  if (!validarCnpj(cnpj)) return { erro: "CNPJ inválido", campo: "cnpj" };
+
+  const existente = await prisma.site.findUnique({ where: { cnpj }, select: { slug: true, userId: true } });
+  if (existente) {
+    if (existente.userId === userId) redirect(`/app/${existente.slug}`);
+    return { erro: "Esse CNPJ já possui um site na plataforma.", campo: "cnpj" };
+  }
+
   const slug = gerarSlug(receita.razao_social, cnpj);
   const paleta = gerarPaletaSeed(`${receita.razao_social}|${cnpj}`);
 
@@ -64,7 +100,7 @@ export async function criarSite(_prev: CriarSiteState, formData: FormData): Prom
 
   await prisma.site.create({
     data: {
-      userId: user.id,
+      userId,
       ativo: false, // nasce como rascunho; publica no editor após revisar
       cnpj,
       slug,
