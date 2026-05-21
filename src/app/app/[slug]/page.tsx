@@ -144,6 +144,7 @@ export default async function EditarSite({ params }: { params: Promise<{ slug: s
           metaPixel={site.metaPixel}
           metaCapiToken={site.metaCapiToken}
           gaId={site.gaId}
+          fbDomainVerif={site.fbDomainVerif}
         />
           </div>
         </details>

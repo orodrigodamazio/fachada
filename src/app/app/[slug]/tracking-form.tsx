@@ -9,6 +9,7 @@ type Props = {
   metaPixel: string | null;
   metaCapiToken: string | null;
   gaId: string | null;
+  fbDomainVerif: string | null;
 };
 
 function BotaoSalvar() {
@@ -24,7 +25,7 @@ function BotaoSalvar() {
   );
 }
 
-export function TrackingForm({ slug, metaPixel, metaCapiToken, gaId }: Props) {
+export function TrackingForm({ slug, metaPixel, metaCapiToken, gaId, fbDomainVerif }: Props) {
   const acao = salvarTracking.bind(null, slug);
   const [state, action] = useActionState<TrackingState, FormData>(acao, undefined);
 
@@ -36,6 +37,18 @@ export function TrackingForm({ slug, metaPixel, metaCapiToken, gaId }: Props) {
       </header>
 
       <form action={action} className="space-y-4">
+        <div className="space-y-1.5">
+          <label htmlFor="fbDomainVerif" className="text-sm font-medium">Verificação de domínio (Meta / Facebook)</label>
+          <input
+            id="fbDomainVerif"
+            name="fbDomainVerif"
+            defaultValue={fbDomainVerif ?? ""}
+            placeholder='Cole o token ou a metatag <meta name="facebook-domain-verification" ...>'
+            className="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400 font-mono"
+          />
+          <p className="text-xs text-zinc-500">No Business Manager &gt; Segurança da marca &gt; Domínios, escolha &quot;Adicionar metatag&quot;. A tag entra sozinha no &lt;head&gt; do site.</p>
+        </div>
+
         <div className="space-y-1.5">
           <label htmlFor="metaPixel" className="text-sm font-medium">Meta Pixel ID</label>
           <input

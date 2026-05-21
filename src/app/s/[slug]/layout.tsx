@@ -46,8 +46,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     icons: {
       icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
     },
-    other: site.metaPixel ? { "fb:app_id": site.metaPixel } : undefined,
+    other: montarOutrosMeta(site.metaPixel, site.fbDomainVerif),
   };
+}
+
+function montarOutrosMeta(metaPixel: string | null, fbDomainVerif: string | null) {
+  const other: Record<string, string> = {};
+  if (metaPixel) other["fb:app_id"] = metaPixel;
+  if (fbDomainVerif) other["facebook-domain-verification"] = fbDomainVerif;
+  return Object.keys(other).length ? other : undefined;
 }
 
 export default async function SiteLayout({

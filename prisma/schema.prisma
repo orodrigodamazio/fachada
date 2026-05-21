@@ -122,6 +122,7 @@ model Site {
   metaPixel       String?
   metaCapiToken   String?
   gaId            String?
+  fbDomainVerif   String?
 
   ativo           Boolean  @default(true)
 

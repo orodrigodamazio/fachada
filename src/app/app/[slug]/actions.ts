@@ -101,7 +101,7 @@ export async function salvarTracking(
   const site = await prisma.site.findUnique({ where: { slug }, select: { id: true } });
   if (!site) return { erro: "Site não encontrado" };
 
-  const data: Partial<Record<CampoTracking, string | null>> = {};
+  const data: Record<string, string | null> = {};
   for (const c of CAMPOS_TRACKING) {
     const v = formData.get(c);
     if (v !== null) {
@@ -110,6 +110,15 @@ export async function salvarTracking(
       if (s && c === "gaId" && !/^(G-|UA-|GTM-)[A-Z0-9-]+$/i.test(s)) return { erro: "GA ID inválido (use G-XXX, UA-XXX ou GTM-XXX)" };
       data[c] = s || null;
     }
+  }
+
+  const fb = formData.get("fbDomainVerif");
+  if (fb !== null) {
+    let s = String(fb).trim();
+    const m = s.match(/content=["']([^"']+)["']/i); // aceita colar a metatag inteira
+    if (m) s = m[1].trim();
+    if (s && !/^[A-Za-z0-9_-]{8,128}$/.test(s)) return { erro: "Token de verificação inválido" };
+    data.fbDomainVerif = s || null;
   }
 
   await prisma.site.update({ where: { id: site.id }, data });
